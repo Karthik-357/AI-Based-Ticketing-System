@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment variables (contains secrets - never commit these)
+.env
+**/.env
+.env.local
+.env.*.local
+
+# Frontend build output
+frontend/dist/
+frontend/.vite/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor directories
+.vscode/
+.idea/
+
+# Inngest dev cache
+.inngest/
