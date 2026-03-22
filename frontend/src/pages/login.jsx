@@ -30,6 +30,7 @@ function Login() {
         localStorage.setItem("userId", data.user._id)
         localStorage.setItem("userEmail", data.user.email)
         localStorage.setItem("userRole", data.user.role)
+        localStorage.setItem("userDepartment", data.user.department?._id || "")
         navigate("/")
       } else {
         alert(data.error || "Login failed")

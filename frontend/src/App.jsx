@@ -40,11 +40,17 @@ function App() {
               </h1>
             </div>
             <div className="flex items-center gap-4">
-              <button 
+              <button
                 onClick={() => navigate('/')}
                 className={`text-gray-600 hover:text-gray-900 font-medium ${location.pathname === '/' ? 'text-blue-600' : ''}`}
               >
                 Tickets
+              </button>
+              <button
+                onClick={() => navigate('/incidents')}
+                className={`text-gray-600 hover:text-gray-900 font-medium ${location.pathname.startsWith('/incidents') ? 'text-blue-600' : ''}`}
+              >
+                Incidents
               </button>
               {isAdmin && (
                 <button 

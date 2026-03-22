@@ -7,9 +7,13 @@ import Skill from "../models/skill.js"
 // Department can come as id or name from admin forms.
 const resolveDepartment = async (deptInput) => {
     if (!deptInput) return null
-    if (deptInput.match?.(/^[0-9a-fA-F]{24}$/)) return deptInput
-    let dept = await Department.findOne({ name: { $regex: new RegExp(`^${deptInput}$`, 'i') } })
-    if (!dept) dept = await Department.create({ name: deptInput })
+    if (deptInput.match?.(/^[0-9a-fA-F]{24}$/)) {
+        const dept = await Department.findById(deptInput)
+        if (!dept) throw new Error("Department not found")
+        return deptInput
+    }
+    const dept = await Department.findOne({ name: { $regex: new RegExp(`^${deptInput.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } })
+    if (!dept) throw new Error(`Department "${deptInput}" does not exist. Please create it first.`)
     return dept._id
 }
 
@@ -40,7 +44,12 @@ export const addUser = async (req, res) => {
         const existingUser = await User.findOne({ email });
         if (existingUser) return res.status(400).json({ error: "User already exists" });
 
-        const departmentId = await resolveDepartment(department)
+        let departmentId
+        try {
+            departmentId = await resolveDepartment(department)
+        } catch (err) {
+            return res.status(400).json({ error: err.message })
+        }
         const skillIds = await resolveSkills(skills, departmentId)
 
         const hashed = await bcrypt.hash(password, 10)
@@ -139,7 +148,11 @@ export const updateUser = async (req, res) => {
 
         let resolvedDeptId = user.department;
         if (department !== undefined) {
-            resolvedDeptId = department ? await resolveDepartment(department) : null
+            try {
+                resolvedDeptId = department ? await resolveDepartment(department) : null
+            } catch (err) {
+                return res.status(400).json({ error: err.message })
+            }
             user.department = resolvedDeptId;
         }
 
@@ -213,6 +226,30 @@ export const getDepartmentEmployees = async (req, res) => {
     } catch (error) {
         res.status(500).json({
             error: "Failed to fetch employees",
+            details: error.message
+        });
+    }
+};
+
+export const getCollaboratorCandidates = async (req, res) => {
+    try {
+        const user = req.user;
+        const { excludeIds = [] } = req.query;
+
+        const excludeList = Array.isArray(excludeIds) ? excludeIds : excludeIds ? [excludeIds] : [];
+        excludeList.push(user._id.toString());
+
+        const employees = await User.find({
+            role: "employee",
+            _id: { $nin: excludeList }
+        })
+            .select("_id email department skills")
+            .populate('department', 'name _id')
+            .populate('skills', 'name _id');
+        return res.json(employees);
+    } catch (error) {
+        res.status(500).json({
+            error: "Failed to fetch collaborator candidates",
             details: error.message
         });
     }

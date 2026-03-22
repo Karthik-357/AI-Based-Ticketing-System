@@ -1,6 +1,10 @@
 import Comment from '../models/comment.js';
 import Ticket from '../models/ticket.js';
 import TicketActivity from '../models/ticketActivity.js';
+import {
+    canEmployeeAccessTicket,
+    canManagerAccessTicket
+} from '../utils/ticketHelpers.js';
 
 export const addComment = async (req, res) => {
     try {
@@ -11,6 +15,13 @@ export const addComment = async (req, res) => {
         const ticket = await Ticket.findById(ticketId);
         if (!ticket) {
             return res.status(404).json({ message: "Ticket not found" });
+        }
+
+        if (req.user.role === "manager") {
+            const canAccess = await canManagerAccessTicket(req.user, ticket)
+            if (!canAccess) return res.status(403).json({ message: "Access denied" })
+        } else if (req.user.role === "employee" && !canEmployeeAccessTicket(req.user, ticket)) {
+            return res.status(403).json({ message: "Access denied" })
         }
 
         const newComment = await Comment.create({
@@ -45,6 +56,13 @@ export const getComments = async (req, res) => {
         const ticket = await Ticket.findById(ticketId);
         if (!ticket) {
             return res.status(404).json({ message: "Ticket not found" });
+        }
+
+        if (req.user.role === "manager") {
+            const canAccess = await canManagerAccessTicket(req.user, ticket)
+            if (!canAccess) return res.status(403).json({ message: "Access denied" })
+        } else if (req.user.role === "employee" && !canEmployeeAccessTicket(req.user, ticket)) {
+            return res.status(403).json({ message: "Access denied" })
         }
 
         const comments = await Comment.find({ ticketId })

@@ -8,6 +8,8 @@ import Tickets from './pages/tickets.jsx'
 import TicketDetailsPage from './pages/ticket.jsx'
 import Login from './pages/login.jsx'
 import Admin from './pages/admin.jsx'
+import Incidents from './pages/incidents.jsx'
+import IncidentDetailsPage from './pages/incident.jsx'
 
 createRoot(document.getElementById('root')).render(
    <StrictMode>
@@ -45,6 +47,22 @@ createRoot(document.getElementById('root')).render(
                   element={
                      <CheckAuth protected={true} requiredRole="admin">
                         <Admin />
+                     </CheckAuth>
+                  }
+               />
+               <Route
+                  path="/incidents"
+                  element={
+                     <CheckAuth protected={true}>
+                        <Incidents />
+                     </CheckAuth>
+                  }
+               />
+               <Route
+                  path="/incidents/:id"
+                  element={
+                     <CheckAuth protected={true}>
+                        <IncidentDetailsPage />
                      </CheckAuth>
                   }
                />

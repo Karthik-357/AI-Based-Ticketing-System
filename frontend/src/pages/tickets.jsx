@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 function Tickets() {
   const [tickets, setTickets] = useState([])
+  const [departments, setDepartments] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [form, setForm] = useState({ title: "", description: "", category: "", priority: "medium" })
@@ -12,8 +13,24 @@ function Tickets() {
   const userRole = localStorage.getItem("userRole")
 
   useEffect(() => {
+    fetchDepartments()
+  }, [])
+
+  useEffect(() => {
     fetchTickets()
   }, [activeTab])
+
+  const fetchDepartments = async () => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/departments`, {
+        headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+      })
+      const data = await res.json()
+      if (res.ok) setDepartments(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error("Error fetching departments:", error)
+    }
+  }
 
   const fetchTickets = async () => {
     setLoading(true)
@@ -30,9 +47,14 @@ function Tickets() {
       const data = await res.json()
       if (res.ok) {
         setTickets(Array.isArray(data) ? data : [])
+      } else {
+        console.error("Failed to fetch tickets:", data.message)
+        alert(data.message || "Failed to fetch tickets")
+        setTickets([])
       }
     } catch (error) {
       console.error("Error fetching tickets:", error)
+      setTickets([])
     }
     finally {
       setLoading(false)
@@ -83,7 +105,7 @@ function Tickets() {
         </button>
       </div>
 
-      {/* Tabs for Raised / Assigned / All (admin only) */}
+      {/* Tabs for Raised / Assigned / Collaborating / All (admin only) */}
       <div className="flex gap-2 mb-6">
         <button
           onClick={() => setActiveTab("raised")}
@@ -103,6 +125,26 @@ function Tickets() {
         >
           Tickets Assigned
         </button>
+        <button
+          onClick={() => setActiveTab("collaborating")}
+          className={`px-5 py-2 rounded-t-lg font-semibold text-sm border-b-2 transition-colors ${activeTab === "collaborating"
+              ? "border-green-600 text-green-700 bg-green-50"
+              : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+            }`}
+        >
+          Collaborating
+        </button>
+        {(userRole === "manager" || userRole === "admin") && (
+          <button
+            onClick={() => setActiveTab("collab_pending")}
+            className={`px-5 py-2 rounded-t-lg font-semibold text-sm border-b-2 transition-colors ${activeTab === "collab_pending"
+                ? "border-orange-600 text-orange-700 bg-orange-50"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+              }`}
+          >
+            Pending Approvals
+          </button>
+        )}
         {userRole === "admin" && (
           <button
             onClick={() => setActiveTab("all")}
@@ -152,11 +194,9 @@ function Tickets() {
                   className="w-full px-3 py-2 border border-gray-300 rounded text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select Category</option>
-                  <option value="IT">IT</option>
-                  <option value="HR">HR</option>
-                  <option value="Legal">Legal</option>
-                  <option value="Finance">Finance</option>
-                  <option value="Facilities">Facilities</option>
+                  {departments.map((dept) => (
+                    <option key={dept._id} value={dept.name}>{dept.name}</option>
+                  ))}
                 </select>
               </div>
               <div>
@@ -191,9 +231,13 @@ function Tickets() {
               ? "You haven't raised any tickets yet. Create your first ticket!"
               : activeTab === "assigned"
                 ? "No tickets assigned to you yet."
-                : activeTab === "all"
-                  ? "No tickets exist in the system yet."
-                  : "No tickets yet."}
+                : activeTab === "collaborating"
+                  ? "You're not collaborating on any tickets yet."
+                  : activeTab === "collab_pending"
+                    ? "No pending collaboration requests to review."
+                    : activeTab === "all"
+                      ? "No tickets exist in the system yet."
+                      : "No tickets yet."}
           </div>
         ) : (
           tickets.map((ticket) => (

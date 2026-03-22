@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Loader from './Loader';
 
 function CheckAuth({children, protected: protectedRoute, requiredRole}) {
     const navigate = useNavigate()
@@ -30,7 +31,7 @@ useEffect(() => {
 
 
   if(loading){
-    return <div>Loading...</div>
+    return <Loader />;
   }
   return children;
 }
