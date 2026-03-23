@@ -66,52 +66,56 @@ const CommentSection = ({ ticketId }) => {
         }
     };
 
-    if (loading) return <div className="py-4 text-gray-500">Loading comments...</div>;
+    if (loading) return <div className="py-8 text-slate-400 font-medium text-center italic">Loading comments...</div>;
 
     return (
-        <div className="mt-8 border-t pt-6">
-            <h2 className="text-xl font-semibold mb-4">Comments & Activity</h2>
+        <div className="mt-10 mb-6">
+            <h2 className="text-xl font-bold mb-6 text-slate-800 tracking-tight flex items-center gap-2">
+                Comments & Activity
+                <span className="bg-slate-100 text-slate-600 px-2 py-0.5 text-sm rounded-full">{comments.length}</span>
+            </h2>
 
             {/* Comments List */}
             <div className="space-y-4 mb-8">
                 {comments.length === 0 ? (
-                    <p className="text-gray-500 italic">No comments yet.</p>
+                    <p className="text-slate-400 text-sm font-medium italic p-6 bg-slate-50/50 rounded-xl text-center border border-dashed border-slate-200">No comments yet. Start the conversation!</p>
                 ) : (
                     comments.map((comment) => (
-                        <div key={comment._id} className="p-4 rounded-lg border bg-white border-gray-200">
-                            <div className="flex justify-between items-start mb-2">
+                        <div key={comment._id} className="p-5 rounded-xl bg-slate-50 border border-slate-100 shadow-sm relative group">
+                            <div className="flex justify-between items-start mb-3">
                                 <div className="flex items-center gap-2">
-                                    <span className="font-medium text-gray-900">
+                                    <span className="font-bold text-slate-800 text-sm">
                                         {comment.userId?.email || 'Unknown User'}
                                     </span>
-                                    <span className={`text-xs px-2 py-0.5 rounded-full ${comment.userId?.role === 'admin' ? 'bg-purple-100 text-purple-800' :
+                                    <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${comment.userId?.role === 'admin' ? 'bg-purple-100 text-purple-800' :
                                             comment.userId?.role === 'manager' ? 'bg-emerald-100 text-emerald-800' :
                                                 comment.userId?.role === 'employee' ? 'bg-orange-100 text-orange-800' :
-                                                    'bg-gray-100 text-gray-800'
+                                                    'bg-slate-100 text-slate-800'
                                         }`}>
                                         {comment.userId?.role || 'employee'}
                                     </span>
                                 </div>
-                                <span className="text-sm text-gray-500">
+                                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
                                     {new Date(comment.createdAt).toLocaleString()}
                                 </span>
                             </div>
-                            <p className="text-gray-700 whitespace-pre-wrap">{comment.content}</p>
+                            <p className="text-slate-700 whitespace-pre-wrap leading-relaxed">{comment.content}</p>
                         </div>
                     ))
                 )}
             </div>
 
             {/* Add Comment Form */}
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <h3 className="text-md font-medium mb-2">Add a Comment</h3>
-                <form onSubmit={handleSubmit}>
+            <div className="glass-panel p-6 sm:p-8 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-bl-full pointer-events-none opacity-50"></div>
+                
+                <h3 className="text-sm font-bold text-slate-800 mb-4 uppercase tracking-wider relative z-10">Add a Comment</h3>
+                <form onSubmit={handleSubmit} className="relative z-10">
                     <textarea
                         value={newComment}
                         onChange={(e) => setNewComment(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
-                        rows="3"
-                        placeholder="Type your comment here..."
+                        className="glass-input resize-y min-h-[100px] mb-4 text-sm"
+                        placeholder="Type your comment or update here..."
                         required
                     />
 
@@ -119,7 +123,7 @@ const CommentSection = ({ ticketId }) => {
                         <button
                             type="submit"
                             disabled={submitting || !newComment.trim()}
-                            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 font-medium"
+                            className="glass-button-primary px-6 py-2.5 text-sm"
                         >
                             {submitting ? 'Posting...' : 'Post Comment'}
                         </button>

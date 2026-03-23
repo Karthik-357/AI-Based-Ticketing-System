@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from "react-router-dom";
+import { ShieldCheck } from "lucide-react";
 
 function Login() {
 
@@ -43,38 +44,50 @@ function Login() {
     }
   }
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="bg-white shadow rounded-lg p-8 w-full max-w-md">
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-900">Login</h2>
-        <form onSubmit={handleLogin}>
-          <div className="mb-4">
-            <label className="block text-gray-700 font-semibold mb-2">Email</label>
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 relative overflow-hidden">
+        {/* Soft decorative background element */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-600/5 rounded-full blur-3xl pointer-events-none"></div>
+      
+      <div className="glass-panel p-8 sm:p-10 w-full max-w-md relative z-10 mx-4">
+        <div className="flex flex-col items-center justify-center mb-8">
+            <div className="w-14 h-14 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center justify-center mb-4 shadow-sm">
+                <ShieldCheck className="w-8 h-8 text-indigo-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-center text-slate-800 tracking-tight">System Access</h2>
+            <p className="text-sm font-medium text-slate-500 mt-1">Sign in with your organizational account.</p>
+        </div>
+        
+        <form onSubmit={handleLogin} className="space-y-5">
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2 ml-1">Email Address</label>
             <input
               type="email"
               name="email"
               value={form.email}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="glass-input"
+              placeholder="name@company.com"
               required
             />
           </div>
-          <div className="mb-6">
-            <label className="block text-gray-700 font-semibold mb-2">Password</label>
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2 ml-1">Password</label>
             <input
               type="password"
               name="password"
               value={form.password}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="glass-input"
+              placeholder="••••••••"
               required
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+            className="glass-button-primary w-full py-3 mt-2 text-[13px] tracking-wide"
           >
-            {loading ? "Logging in..." : "Login"}
+            {loading ? "Authenticating..." : "Sign In"}
           </button>
         </form>
       </div>

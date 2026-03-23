@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from "react-router-dom"
+import { AlertTriangle, Siren } from "lucide-react"
 
 function Incidents() {
     const [incidents, setIncidents] = useState([])
@@ -26,80 +27,108 @@ function Incidents() {
     }
 
     const statusColors = {
-        investigating: "bg-red-100 text-red-800",
-        identified: "bg-yellow-100 text-yellow-800",
-        monitoring: "bg-blue-100 text-blue-800",
-        resolved: "bg-green-100 text-green-800",
+        investigating: "bg-rose-50 text-rose-700 border border-rose-200 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest",
+        identified: "bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest",
+        monitoring: "bg-indigo-50 text-indigo-700 border border-indigo-200 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest",
+        resolved: "bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest",
     }
 
     const priorityColors = {
-        P1: "bg-red-600 text-white",
-        P2: "bg-orange-500 text-white",
-        P3: "bg-yellow-500 text-white",
-        P4: "bg-blue-500 text-white",
+        P1: "bg-rose-100 text-rose-800 border border-rose-200",
+        P2: "bg-orange-100 text-orange-800 border border-orange-200",
+        P3: "bg-amber-100 text-amber-800 border border-amber-200",
+        P4: "bg-indigo-100 text-indigo-800 border border-indigo-200",
     }
 
     const priorityBorders = {
-        P1: "border-red-600",
-        P2: "border-orange-500",
-        P3: "border-yellow-500",
-        P4: "border-blue-500",
+        P1: "border-l-rose-500",
+        P2: "border-l-orange-500",
+        P3: "border-l-amber-500",
+        P4: "border-l-indigo-500",
     }
 
     if (loading) {
         return (
             <div className="flex justify-center items-center py-20">
-                <span className="text-gray-500 text-lg">Loading incidents...</span>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
             </div>
         )
     }
 
     return (
-        <div>
-            <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">Incidents</h2>
-                <span className="text-sm text-gray-500">{incidents.length} incident{incidents.length !== 1 ? 's' : ''}</span>
+        <div className="p-6 lg:p-8 max-w-7xl mx-auto space-y-8">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-200 pb-6">
+                <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-rose-100 text-rose-600 rounded-xl">
+                        <Siren className="w-6 h-6" />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Active Incidents</h1>
+                        <p className="text-sm text-slate-500 font-medium mt-1">
+                            Major platform issues and coordinated responses.
+                        </p>
+                    </div>
+                </div>
+                <div className="px-4 py-1.5 bg-white border border-slate-200 shadow-sm rounded-lg flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                    <span className="text-sm font-bold text-slate-700">{incidents.length} <span className="text-slate-500 font-medium">Ongoing</span></span>
+                </div>
             </div>
 
             {incidents.length === 0 ? (
-                <div className="bg-white rounded-lg shadow p-8 text-center">
-                    <p className="text-gray-500 text-lg">No incidents detected yet.</p>
-                    <p className="text-gray-400 text-sm mt-2">Incidents are automatically created when multiple similar tickets are detected.</p>
+                <div className="glass-panel flex flex-col items-center justify-center py-24 px-4 text-center">
+                    <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
+                        <AlertTriangle className="w-10 h-10 text-emerald-500" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-800 mb-2">Systems Operational</h3>
+                    <p className="text-slate-500 max-w-sm">No active incidents detected. Incidents are automatically created when multiple related tickets are identified.</p>
                 </div>
             ) : (
                 <div className="space-y-4">
                     {incidents.map((incident) => (
                         <div
                             key={incident._id}
-                            className={`bg-white rounded-lg shadow p-5 cursor-pointer hover:shadow-md transition-shadow border-l-4 ${priorityBorders[incident.priority] || 'border-yellow-500'}`}
+                            className={`glass-panel p-6 cursor-pointer hover:bg-slate-50 transition-colors border-l-4 border-r-transparent border-t-transparent border-b-transparent ${priorityBorders[incident.priority] || 'border-l-amber-500'} relative overflow-hidden`}
                             onClick={() => navigate(`/incidents/${incident._id}`)}
                         >
-                            <div className="flex justify-between items-start mb-3">
-                                <div className="flex items-center gap-3">
-                                    <span className="text-sm font-mono font-bold text-red-600">
+                            <div className="absolute -right-6 -top-6 text-slate-100/50 pointer-events-none">
+                                <Siren className="w-32 h-32" />
+                            </div>
+                            
+                            <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
+                                <div className="flex flex-wrap items-center gap-3">
+                                    <span className="text-sm font-mono font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded border border-rose-100">
                                         INC-{String(incident.incidentNumber).padStart(3, '0')}
                                     </span>
-                                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${priorityColors[incident.priority] || priorityColors.P3}`}>
+                                    <span className={`px-2 py-1 rounded-md text-[10px] uppercase tracking-wider font-bold ${priorityColors[incident.priority] || priorityColors.P3}`}>
                                         {incident.priority || 'P3'}
                                     </span>
-                                    <h3 className="text-lg font-semibold text-gray-900">{incident.title}</h3>
+                                    <h3 className="text-lg font-bold text-slate-800 py-0.5">{incident.title}</h3>
                                 </div>
-                                <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${statusColors[incident.status]}`}>
-                                    {incident.status}
+                                <span className={statusColors[incident.status] || statusColors.investigating}>
+                                    {incident.status?.replace("_", " ")}
                                 </span>
                             </div>
 
-                            <p className="text-gray-600 text-sm mb-3 line-clamp-2">{incident.description}</p>
+                            <p className="relative z-10 text-slate-600 font-medium text-sm mb-5 line-clamp-2 max-w-4xl">{incident.description}</p>
 
-                            <div className="flex items-center gap-4 text-xs text-gray-500">
-                                <span className="bg-gray-100 px-2 py-1 rounded font-medium">
-                                    {incident.department?.name || 'Unknown'}
+                            <div className="relative z-10 flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-500">
+                                <span className="bg-slate-100/80 px-3 py-1 rounded-lg">
+                                    Dept: <span className="text-slate-700">{incident.department?.name || 'Unknown'}</span>
                                 </span>
-                                <span>Lead: {incident.incidentLead?.email || 'Unassigned'}</span>
-                                <span>{incident.tickets?.length || 0} ticket{(incident.tickets?.length || 0) !== 1 ? 's' : ''}</span>
-                                <span>{new Date(incident.createdAt).toLocaleDateString()}</span>
+                                <span className="bg-slate-100/80 px-3 py-1 rounded-lg">
+                                    Lead: <span className="text-slate-700">{incident.incidentLead?.email || 'Unassigned'}</span>
+                                </span>
+                                <span className="bg-slate-100/80 px-3 py-1 rounded-lg">
+                                    <span className="text-slate-700">{incident.tickets?.length || 0}</span> Linked Tickets
+                                </span>
+                                <span className="px-1 text-slate-400">
+                                    {new Date(incident.createdAt).toLocaleDateString()}
+                                </span>
                                 {incident.resolvedAt && (
-                                    <span className="text-green-600">Resolved: {new Date(incident.resolvedAt).toLocaleDateString()}</span>
+                                    <span className="text-emerald-600 ml-auto font-bold bg-emerald-50 px-2 py-1 rounded">
+                                        Resolved: {new Date(incident.resolvedAt).toLocaleDateString()}
+                                    </span>
                                 )}
                             </div>
                         </div>

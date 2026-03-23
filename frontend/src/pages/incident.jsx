@@ -196,31 +196,31 @@ function IncidentDetailsPage() {
     }
 
     const statusColors = {
-        investigating: "bg-red-100 text-red-800",
-        identified: "bg-yellow-100 text-yellow-800",
-        monitoring: "bg-blue-100 text-blue-800",
-        resolved: "bg-green-100 text-green-800",
+        investigating: "bg-rose-50 text-rose-700 border border-rose-200 px-3 py-1 rounded-full text-xs font-bold tracking-widest",
+        identified: "bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full text-xs font-bold tracking-widest",
+        monitoring: "bg-indigo-50 text-indigo-700 border border-indigo-200 px-3 py-1 rounded-full text-xs font-bold tracking-widest",
+        resolved: "bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-xs font-bold tracking-widest",
     }
 
     const ticketStatusColors = {
-        TODO: "bg-gray-100 text-gray-800",
-        IN_PROGRESS: "bg-blue-100 text-blue-800",
-        DONE: "bg-green-100 text-green-800",
-        CLOSED: "bg-red-100 text-red-800",
+        TODO: "bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider",
+        IN_PROGRESS: "bg-indigo-50 text-indigo-600 border border-indigo-200 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider",
+        DONE: "bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider",
+        CLOSED: "bg-purple-50 text-purple-600 border border-purple-200 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider",
     }
 
     const priorityColors = {
-        low: "bg-gray-100 text-gray-700",
-        medium: "bg-yellow-100 text-yellow-700",
-        high: "bg-orange-100 text-orange-700",
-        critical: "bg-red-100 text-red-700",
+        low: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+        medium: "bg-amber-50 text-amber-700 border border-amber-200",
+        high: "bg-orange-50 text-orange-700 border border-orange-200",
+        critical: "bg-rose-50 text-rose-700 border border-rose-200",
     }
 
     const incidentPriorityColors = {
-        P1: "bg-red-600 text-white",
-        P2: "bg-orange-500 text-white",
-        P3: "bg-yellow-500 text-white",
-        P4: "bg-blue-500 text-white",
+        P1: "bg-rose-100 text-rose-800 border border-rose-200 px-3 py-1 rounded-full text-xs font-bold tracking-widest",
+        P2: "bg-orange-100 text-orange-800 border border-orange-200 px-3 py-1 rounded-full text-xs font-bold tracking-widest",
+        P3: "bg-amber-100 text-amber-800 border border-amber-200 px-3 py-1 rounded-full text-xs font-bold tracking-widest",
+        P4: "bg-blue-100 text-blue-800 border border-blue-200 px-3 py-1 rounded-full text-xs font-bold tracking-widest",
     }
 
     const priorityLabels = {
@@ -269,145 +269,93 @@ function IncidentDetailsPage() {
     const nextStatuses = statusFlow[incident.status] || []
 
     return (
-        <div>
+        <div className="p-4 sm:p-6 lg:max-w-[1600px] w-full mx-auto space-y-6 pb-12">
             <button
                 onClick={() => navigate('/incidents')}
-                className="mb-4 text-blue-600 hover:underline text-sm"
+                className="glass-button-secondary mb-2 w-fit px-4 py-2 text-sm"
             >
                 &larr; Back to Incidents
             </button>
 
-            {/* Incident Header */}
-            <div className="bg-white rounded-lg shadow p-6 mb-6">
-                <div className="flex justify-between items-start mb-4">
+            {/* Incident Header (Full width) */}
+            <div className="glass-panel p-6 sm:p-8 relative overflow-hidden">
+                <div className="absolute -right-10 -top-10 text-slate-100/50 pointer-events-none">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                </div>
+                <div className="relative z-10 flex flex-col md:flex-row justify-between items-start gap-6">
                     <div>
-                        <div className="flex items-center gap-3 mb-2">
-                            <span className="text-lg font-mono font-bold text-red-600">{incNumber}</span>
-                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${incidentPriorityColors[incident.priority || 'P3']}`}>
+                        <div className="flex flex-wrap items-center gap-3 mb-3">
+                            <span className="text-sm font-mono font-bold text-rose-600 bg-rose-50 px-2 py-1 rounded border border-rose-100">{incNumber}</span>
+                            <span className={incidentPriorityColors[incident.priority || 'P3']}>
                                 {incident.priority || 'P3'}
                             </span>
-                            <span className={`px-3 py-1 rounded-full text-xs font-semibold capitalize ${statusColors[incident.status]}`}>
-                                {incident.status}
+                            <span className={statusColors[incident.status]}>
+                                {incident.status?.replace("_", " ")}
                             </span>
                         </div>
-                        <h1 className="text-2xl font-bold text-gray-900">{incident.title}</h1>
-                    </div>
-                    {canManage && incident.status !== "resolved" && (
-                        <select
-                            value={incident.priority || 'P3'}
-                            onChange={(e) => handlePriorityUpdate(e.target.value)}
-                            disabled={updating}
-                            className="border rounded px-3 py-1.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                            <option value="P1">P1 - Critical</option>
-                            <option value="P2">P2 - High</option>
-                            <option value="P3">P3 - Medium</option>
-                            <option value="P4">P4 - Low</option>
-                        </select>
-                    )}
-                </div>
-
-                <p className="text-gray-700 mb-4 whitespace-pre-wrap">{incident.description}</p>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div>
-                        <span className="text-gray-500 block">Department</span>
-                        <span className="font-medium">{incident.department?.name || 'Unknown'}</span>
-                    </div>
-                    <div>
-                        <span className="text-gray-500 block">Incident Lead</span>
-                        <span className="font-medium">{incident.incidentLead?.email || 'Unassigned'}</span>
-                    </div>
-                    <div>
-                        <span className="text-gray-500 block">Created</span>
-                        <span className="font-medium">{new Date(incident.createdAt).toLocaleString()}</span>
-                    </div>
-                    <div>
-                        <span className="text-gray-500 block">{incident.resolvedAt ? 'Resolved' : 'Last Updated'}</span>
-                        <span className="font-medium">
-                            {incident.resolvedAt
-                                ? new Date(incident.resolvedAt).toLocaleString()
-                                : new Date(incident.updatedAt).toLocaleString()
-                            }
-                        </span>
+                        <h1 className="text-3xl font-bold text-slate-800 tracking-tight">{incident.title}</h1>
                     </div>
                 </div>
             </div>
 
-            {/* Status Update Message */}
-            {updateMsg && (
-                <div className={`mb-4 p-3 rounded ${updateMsg.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
-                    {updateMsg.text}
-                </div>
-            )}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+                {/* LEFT COLUMN: Main Content */}
+                <div className="lg:col-span-2 space-y-6">
+                    {/* Linked Tickets */}
+                    <div className="glass-panel p-6 sm:p-8">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b border-slate-100 pb-5">
+                            <h3 className="text-[14px] font-bold text-slate-800 uppercase tracking-wider flex items-center gap-3">
+                                LINKED TICKETS <span className="bg-slate-100 text-slate-500 px-3 py-1 rounded-md text-[12px] font-bold shadow-sm border border-slate-200/60">{incident.tickets?.length || 0}</span>
+                            </h3>
+                            {canManage && incident.status !== "resolved" && (
+                                <button
+                                    onClick={openAddTicketModal}
+                                    className="text-indigo-600 border-2 border-indigo-200 hover:bg-indigo-50 px-5 py-2 text-xs font-bold uppercase tracking-wider rounded-full transition-colors bg-white shadow-sm flex items-center gap-1 active:scale-95"
+                                >
+                                    + ADD TICKET
+                                </button>
+                            )}
+                        </div>
 
-            {/* Status Update Actions */}
-            {canManage && incident.status !== "resolved" && (
-                <div className="bg-white rounded-lg shadow p-5 mb-6">
-                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Update Incident Status</h3>
-                    <div className="flex gap-3 flex-wrap">
-                        {nextStatuses.map((status) => (
-                            <button
-                                key={status}
-                                onClick={() => handleStatusUpdate(status)}
-                                disabled={updating}
-                                className={`px-4 py-2 rounded font-medium text-sm transition-colors capitalize ${
-                                    status === "resolved"
-                                        ? "bg-green-600 text-white hover:bg-green-700"
-                                        : "bg-gray-200 text-gray-800 hover:bg-gray-300"
-                                } ${updating ? "opacity-50 cursor-not-allowed" : ""}`}
-                            >
-                                {updating ? "Updating..." : `Mark as ${status}`}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {/* Linked Tickets */}
-            <div className="bg-white rounded-lg shadow p-5 mb-6">
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                        Linked Tickets ({incident.tickets?.length || 0})
-                    </h3>
-                    {canManage && incident.status !== "resolved" && (
-                        <button
-                            onClick={openAddTicketModal}
-                            className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
-                        >
-                            + Add Ticket
-                        </button>
-                    )}
-                </div>
-
-                {!incident.tickets || incident.tickets.length === 0 ? (
-                    <p className="text-gray-500">No tickets linked to this incident.</p>
-                ) : (
-                    <div className="space-y-3">
-                        {incident.tickets.map((ticket) => (
-                            <div
-                                key={ticket._id}
-                                className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                            >
-                                <div className="flex justify-between items-center">
-                                    <div 
-                                        className="flex items-center gap-3 cursor-pointer flex-1"
+                        {!incident.tickets || incident.tickets.length === 0 ? (
+                            <p className="text-slate-400 text-sm font-medium italic p-6 bg-slate-50/50 rounded-xl text-center border border-dashed border-slate-200">No tickets actively linked to this incident.</p>
+                        ) : (
+                            <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+                                {incident.tickets.map((ticket) => (
+                                    <div
+                                        key={ticket._id}
+                                        className="group border border-slate-200 bg-white rounded-2xl p-5 shadow-sm relative hover:border-indigo-300 hover:shadow-md transition-all cursor-pointer flex flex-col sm:flex-row justify-between sm:items-center gap-4"
                                         onClick={() => navigate(`/tickets/${ticket._id}`)}
                                     >
-                                        <span className="text-sm font-mono font-bold text-blue-600">
-                                            TKT-{String(ticket.ticketNumber).padStart(3, '0')}
-                                        </span>
-                                        <span className="font-medium text-gray-900">{ticket.title}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        {ticket.priority && (
-                                            <span className={`px-2 py-0.5 rounded text-xs font-medium capitalize ${priorityColors[ticket.priority]}`}>
-                                                {ticket.priority}
-                                            </span>
-                                        )}
-                                        <span className={`px-2 py-0.5 rounded text-xs font-medium ${ticketStatusColors[ticket.status]}`}>
-                                            {ticket.status}
-                                        </span>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-start gap-3 mb-3 pr-8">
+                                                <span className="text-[11px] shrink-0 font-mono font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-100 shadow-sm">
+                                                    TKT-{String(ticket.ticketNumber).padStart(3, '0')}
+                                                </span>
+                                                <span className="font-bold text-[15px] text-slate-800 leading-snug group-hover:text-indigo-600 transition-colors truncate">{ticket.title}</span>
+                                            </div>
+                                            
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                {ticket.priority && (
+                                                    <span className={`px-2.5 py-1 rounded-md border text-[10px] font-bold uppercase tracking-wider shadow-sm ${
+                                                        ticket.priority === 'high' || ticket.priority === 'P2' ? 'border-amber-200 text-amber-600 bg-amber-50/50' : 
+                                                        ticket.priority === 'critical' || ticket.priority === 'P1' ? 'border-rose-200 text-rose-600 bg-rose-50/50' : 
+                                                        'border-amber-200 text-amber-600 bg-amber-50/50'
+                                                    }`}>
+                                                        {ticket.priority === 'medium' || ticket.priority === 'P3' ? 'MEDIUM' : ticket.priority}
+                                                    </span>
+                                                )}
+                                                <span className={`px-2.5 py-1 rounded-md border text-[10px] font-bold uppercase tracking-wider border-indigo-200 text-indigo-600 bg-indigo-50/50 shadow-sm`}>
+                                                    {ticket.status?.replace("_", " ")}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="text-xs font-bold text-slate-500 bg-slate-50/50 p-3 rounded-xl border border-slate-100 flex flex-col gap-1 min-w-[200px] shrink-0">
+                                            <span className="text-slate-400 uppercase tracking-widest text-[10px]">OWNER</span>
+                                            <span className="truncate text-slate-700">{ticket.assignedTo?.email || 'Unassigned'}</span>
+                                        </div>
+                                        
                                         {canManage && incident.status !== "resolved" && incident.tickets.length > 1 && (
                                             <button
                                                 onClick={(e) => {
@@ -415,108 +363,193 @@ function IncidentDetailsPage() {
                                                     handleRemoveTicket(ticket._id, ticket.ticketNumber)
                                                 }}
                                                 disabled={updating}
-                                                className="ml-2 text-red-500 hover:text-red-700 text-sm"
+                                                className="absolute top-4 right-4 text-slate-300 hover:text-rose-600 text-2xl p-1 transition-colors leading-none hover:bg-rose-50 rounded-full w-8 h-8 flex items-center justify-center"
                                                 title="Remove from incident"
                                             >
-                                                ✕
+                                                &times;
                                             </button>
                                         )}
                                     </div>
-                                </div>
-                                <div className="flex gap-4 mt-2 text-xs text-gray-500">
-                                    <span>Raised by: {ticket.createdBy?.email || 'Unknown'}</span>
-                                    {ticket.assignedTo && <span>Assigned to: {ticket.assignedTo.email}</span>}
-                                    <span>{ticket.department?.name || ''}</span>
-                                </div>
+                                ))}
                             </div>
-                        ))}
+                        )}
                     </div>
-                )}
-            </div>
 
-            {/* Incident Updates/Notes */}
-            <div className="bg-white rounded-lg shadow p-5 mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Updates & Notes</h3>
-                
-                {canAddUpdates && incident.status !== "resolved" && (
-                    <form onSubmit={handleAddUpdate} className="mb-4">
-                        <textarea
-                            value={newUpdate}
-                            onChange={(e) => setNewUpdate(e.target.value)}
-                            placeholder="Add an update or investigation note..."
-                            className="w-full border rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                            rows={3}
-                        />
-                        <div className="flex justify-end mt-2">
-                            <button
-                                type="submit"
-                                disabled={updating || !newUpdate.trim()}
-                                className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                            >
-                                {updating ? "Adding..." : "Add Update"}
-                            </button>
+                    {/* Incident Updates/Notes */}
+                    <div className="glass-panel p-6 sm:p-8">
+                        <h3 className="text-lg font-bold text-slate-800 mb-6 border-b border-slate-100 pb-4">Updates & Notes</h3>
+                        
+                        {canAddUpdates && incident.status !== "resolved" && (
+                            <form onSubmit={handleAddUpdate} className="mb-8 relative">
+                                <textarea
+                                    value={newUpdate}
+                                    onChange={(e) => setNewUpdate(e.target.value)}
+                                    placeholder="Add an update or investigation note..."
+                                    className="glass-input resize-y min-h-[100px]"
+                                    rows={3}
+                                />
+                                <div className="flex justify-end mt-3">
+                                    <button
+                                        type="submit"
+                                        disabled={updating || !newUpdate.trim()}
+                                        className="glass-button-primary px-5"
+                                    >
+                                        {updating ? "Adding..." : "Add Update"}
+                                    </button>
+                                </div>
+                            </form>
+                        )}
+
+                        {!incident.updates || incident.updates.length === 0 ? (
+                            <p className="text-slate-400 text-sm font-medium italic p-4 bg-slate-50/50 rounded-xl text-center border border-dashed border-slate-200">No updates logged yet.</p>
+                        ) : (
+                            <div className="space-y-4">
+                                {[...incident.updates].reverse().map((update, idx) => (
+                                    <div key={idx} className="bg-slate-50 border border-slate-100 rounded-xl p-5 shadow-sm">
+                                        <p className="text-slate-700 font-medium whitespace-pre-wrap">{update.content}</p>
+                                        <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-3 border-t border-slate-200/60 pt-3">
+                                            <span className="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">{update.userId?.email || 'Unknown'}</span>
+                                            <span>•</span>
+                                            <span>{new Date(update.createdAt).toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* RIGHT COLUMN: Metadata and Context */}
+                <div className="lg:col-span-1 space-y-6 sticky top-6">
+                    
+                    {/* Description */}
+                    <div className="glass-panel p-6">
+                        <h3 className="text-[13px] font-bold text-slate-800 mb-4 uppercase tracking-wider border-b border-slate-100 pb-3">Description</h3>
+                        <div className="text-slate-700 font-medium leading-relaxed whitespace-pre-wrap text-[14px]">
+                            {incident.description}
                         </div>
-                    </form>
-                )}
+                    </div>
 
-                {!incident.updates || incident.updates.length === 0 ? (
-                    <p className="text-gray-500 text-sm">No updates yet.</p>
-                ) : (
-                    <div className="space-y-3">
-                        {[...incident.updates].reverse().map((update, idx) => (
-                            <div key={idx} className="border-l-4 border-blue-400 pl-4 py-2">
-                                <p className="text-gray-800 whitespace-pre-wrap">{update.content}</p>
-                                <div className="text-xs text-gray-500 mt-1">
-                                    {update.userId?.email || 'Unknown'} • {new Date(update.createdAt).toLocaleString()}
+                    {/* Status Update Message */}
+                    {updateMsg && (
+                        <div className={`p-4 rounded-xl text-sm font-bold border shadow-sm ${updateMsg.type === 'success' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-rose-50 text-rose-800 border-rose-200'}`}>
+                            {updateMsg.text}
+                        </div>
+                    )}
+
+                    {/* Properties & Actions */}
+                    <div className="glass-panel p-6">
+                        <h3 className="text-sm font-bold text-slate-800 mb-4 uppercase tracking-wider border-b border-slate-100 pb-3">Properties</h3>
+                        
+                        <div className="space-y-4 mb-6">
+                            <div>
+                                <span className="text-slate-400 text-[10px] uppercase font-bold tracking-widest mb-1 block">Department</span>
+                                <span className="font-semibold text-slate-800 block break-words" title={incident.department?.name}>{incident.department?.name || 'Unknown'}</span>
+                            </div>
+                            <div>
+                                <span className="text-slate-400 text-[10px] uppercase font-bold tracking-widest mb-1 block">Incident Lead</span>
+                                <span className="font-semibold text-slate-800 block break-words" title={incident.incidentLead?.email}>{incident.incidentLead?.email || <span className="text-rose-400 italic font-medium">Unassigned</span>}</span>
+                            </div>
+                            <div className="flex gap-4">
+                                <div className="flex-1 min-w-0">
+                                    <span className="text-slate-400 text-[10px] uppercase font-bold tracking-widest mb-1 block">Created</span>
+                                    <span className="font-semibold text-slate-800 block text-xs">{new Date(incident.createdAt).toLocaleDateString()}</span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <span className="text-slate-400 text-[10px] uppercase font-bold tracking-widest mb-1 block">{incident.resolvedAt ? 'Resolved' : 'Updated'}</span>
+                                    <span className="font-semibold text-slate-800 block text-xs">
+                                        {incident.resolvedAt
+                                            ? new Date(incident.resolvedAt).toLocaleDateString()
+                                            : new Date(incident.updatedAt).toLocaleDateString()
+                                        }
+                                    </span>
                                 </div>
                             </div>
-                        ))}
+                        </div>
+
+                        {canManage && incident.status !== "resolved" && (
+                            <div className="border-t border-slate-100 pt-5 space-y-4">
+                                <div>
+                                    <label className="text-slate-400 text-[10px] uppercase font-bold tracking-widest mb-2 block">Change Priority</label>
+                                    <select
+                                        value={incident.priority || 'P3'}
+                                        onChange={(e) => handlePriorityUpdate(e.target.value)}
+                                        disabled={updating}
+                                        className="glass-input px-3 py-2 pr-8 text-sm font-bold w-full"
+                                    >
+                                        <option value="P1">P1 - Critical</option>
+                                        <option value="P2">P2 - High</option>
+                                        <option value="P3">P3 - Medium</option>
+                                        <option value="P4">P4 - Low</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="text-slate-400 text-[10px] uppercase font-bold tracking-widest mb-2 block">Update Status Phase</label>
+                                    <div className="flex flex-col gap-2">
+                                        {nextStatuses.map((status) => (
+                                            <button
+                                                key={status}
+                                                onClick={() => handleStatusUpdate(status)}
+                                                disabled={updating}
+                                                className={status === "resolved" ? "glass-button-primary !bg-emerald-600 hover:!bg-emerald-500 uppercase tracking-widest text-[10px] py-2 w-full" : "glass-button-secondary uppercase tracking-widest text-[10px] py-2 w-full"}
+                                            >
+                                                {updating ? "..." : `Mark as ${status}`}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
-                )}
+
+
+                </div>
             </div>
 
             {/* Add Ticket Modal */}
             {showAddTicket && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden">
-                        <div className="flex justify-between items-center p-4 border-b">
-                            <h3 className="text-lg font-semibold">Add Ticket to Incident</h3>
+                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden border border-slate-100 flex flex-col">
+                        <div className="flex justify-between items-center p-6 border-b border-slate-100">
+                            <h3 className="text-xl font-bold text-slate-800">Add Ticket to Incident</h3>
                             <button
                                 onClick={() => setShowAddTicket(false)}
-                                className="text-gray-500 hover:text-gray-700 text-xl"
+                                className="text-slate-400 hover:text-slate-600 text-2xl font-light"
                             >
-                                ✕
+                                &times;
                             </button>
                         </div>
-                        <div className="p-4 overflow-y-auto max-h-[60vh]">
+                        <div className="p-6 overflow-y-auto flex-1 bg-slate-50/50">
                             {loadingTickets ? (
-                                <p className="text-gray-500 text-center py-4">Loading available tickets...</p>
+                                <p className="text-slate-500 font-medium text-center py-8">Loading available tickets...</p>
                             ) : availableTickets.length === 0 ? (
-                                <p className="text-gray-500 text-center py-4">No available tickets to add.</p>
+                                <p className="text-slate-500 font-medium text-center py-8">No available tickets to add.</p>
                             ) : (
-                                <div className="space-y-2">
+                                <div className="space-y-3">
                                     {availableTickets.map((ticket) => (
                                         <div
                                             key={ticket._id}
-                                            className="border rounded-lg p-3 flex justify-between items-center hover:bg-gray-50"
+                                            className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row justify-between sm:items-center gap-4 hover:border-indigo-300 hover:shadow-sm transition-all"
                                         >
                                             <div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-sm font-mono font-bold text-blue-600">
+                                                <div className="flex items-center gap-3">
+                                                    <span className="text-sm font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
                                                         TKT-{String(ticket.ticketNumber).padStart(3, '0')}
                                                     </span>
-                                                    <span className="font-medium text-gray-900">{ticket.title}</span>
+                                                    <span className="font-bold text-slate-800">{ticket.title}</span>
                                                 </div>
-                                                <div className="text-xs text-gray-500 mt-1">
-                                                    {ticket.department?.name} • {ticket.createdBy?.email}
+                                                <div className="flex gap-2 text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-2">
+                                                    <span className="bg-slate-100 px-2 py-0.5 rounded">{ticket.department?.name}</span>
+                                                    <span className="px-2 py-0.5">{ticket.createdBy?.email}</span>
                                                 </div>
                                             </div>
                                             <button
                                                 onClick={() => handleAddTicket(ticket._id)}
                                                 disabled={updating}
-                                                className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700 disabled:opacity-50"
+                                                className="glass-button-secondary text-indigo-600 border-indigo-200 hover:bg-indigo-50 py-1.5 px-6 whitespace-nowrap"
                                             >
-                                                Add
+                                                Add to Incident
                                             </button>
                                         </div>
                                     ))}

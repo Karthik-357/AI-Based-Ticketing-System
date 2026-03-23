@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
+import Sidebar from './components/Sidebar'
 
 function App() {
   const navigate = useNavigate()
@@ -24,59 +25,18 @@ function App() {
     navigate('/login')
   }
 
-  const isAdmin = user?.role === 'admin'
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <h1 
-                className="text-2xl font-bold text-blue-600 cursor-pointer"
-                onClick={() => navigate('/')}
-              >
-                Ticketing System
-              </h1>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => navigate('/')}
-                className={`text-gray-600 hover:text-gray-900 font-medium ${location.pathname === '/' ? 'text-blue-600' : ''}`}
-              >
-                Tickets
-              </button>
-              <button
-                onClick={() => navigate('/incidents')}
-                className={`text-gray-600 hover:text-gray-900 font-medium ${location.pathname.startsWith('/incidents') ? 'text-blue-600' : ''}`}
-              >
-                Incidents
-              </button>
-              {isAdmin && (
-                <button 
-                  onClick={() => navigate('/admin')}
-                  className={`text-gray-600 hover:text-gray-900 font-medium ${location.pathname === '/admin' ? 'text-blue-600' : ''}`}
-                >
-                  User Management
-                </button>
-              )}
-              {user && (
-                <span className="text-gray-600 text-sm">
-                  {user.email}
-                </span>
-              )}
-              <button 
-                onClick={handleLogout}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 font-medium"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
+    <div className="flex h-screen overflow-hidden bg-slate-50">
+      {/* Sidebar on the left */}
+      <div className="flex-shrink-0">
+         <Sidebar user={user} onLogout={handleLogout} />
+      </div>
+
+      {/* Main content area */}
+      <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <div className="max-w-7xl mx-auto">
+           <Outlet />
         </div>
-      </nav>
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <Outlet />
       </main>
     </div>
   )

@@ -137,19 +137,17 @@ function Admin() {
   }
 
   return (
-    <div className="space-y-6 pb-12 animate-in fade-in duration-500">
+    <div className="space-y-6 pb-12">
       
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 sm:p-8 rounded-3xl border border-slate-100 backdrop-hidden shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full hidden -mr-32 -mt-32 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-purple-500/10 rounded-full hidden -ml-32 -mb-32 pointer-events-none" />
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white shadow-sm p-6 sm:p-8 rounded-2xl border border-slate-100 relative overflow-hidden">
         
         <div className="relative z-10">
-          <h1 className="text-3xl font-bold   tracking-tight flex items-center gap-3">
-            <Settings className="w-8 h-8 text-indigo-400" />
+          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
+            <Settings className="w-8 h-8 text-indigo-500" />
             System Administration
           </h1>
-          <p className="text-slate-400 font-light tracking-wide mt-2">
+          <p className="text-slate-500 font-medium mt-2">
             Manage users, roles, departments, and system configurations.
           </p>
         </div>
@@ -172,7 +170,7 @@ function Admin() {
 
       {/* Main Content Area */}
       {activeSection === "users" && (
-        <div className="space-y-6 animate-in fade-in duration-500 relative z-10">
+        <div className="space-y-6 relative z-10">
             
             {/* Action Bar */}
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -197,13 +195,10 @@ function Admin() {
 
             {/* Create User Form Section */}
             {showCreateUser && (
-                <div className="glass-panel p-6 sm:p-8 animate-in fade-in duration-300 border-t-2 border-t-indigo-500 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-8 opacity-5">
-                       <UserPlus className="w-32 h-32 text-indigo-500" />
-                    </div>
+                <div className="glass-panel p-6 sm:p-8 border-t-2 border-t-indigo-500 relative overflow-hidden">
                     <div className="relative z-10">
                         <h2 className="text-xl font-bold mb-6 text-slate-800 flex items-center gap-2">
-                           <span className="p-1.5 bg-indigo-500/20 rounded-md text-indigo-400 border border-indigo-500/20"><UserPlus className="w-5 h-5" /></span>
+                           <span className="p-1.5 bg-indigo-50 rounded-md text-indigo-600 border border-indigo-100"><UserPlus className="w-5 h-5" /></span>
                            Account Registration
                         </h2>
                         <CreateUserForm departments={departments} onSuccess={() => { fetchData(); setShowCreateUser(false); }} />
@@ -214,9 +209,9 @@ function Admin() {
             {/* Users List */}
             <div className="flex flex-col gap-4">
                 {filteredUsers.map((user) => (
-                    <div key={user._id} className="glass-panel p-4 sm:p-5 flex flex-col group relative overflow-visible transition-all hover:bg-slate-50/40 border-l-4 border-l-transparent hover:border-l-indigo-500">
+                    <div key={user._id} className="glass-panel p-4 sm:p-5 flex flex-col group relative overflow-visible hover:bg-slate-50 border-l-4 border-l-transparent hover:border-l-indigo-500">
                         {editingUser === user._id ? (
-                            <div className="flex flex-col animate-in fade-in duration-200 relative z-10 w-full">
+                            <div className="flex flex-col relative z-10 w-full">
                                 <div className="space-y-4">
                                     <div className="flex justify-between items-center border-b border-slate-200 pb-2 mb-4 mt-1">
                                       <h3 className="text-lg font-bold text-slate-800">Edit User Profile</h3>
@@ -242,7 +237,7 @@ function Admin() {
                                             <select
                                                 value={editForm.role}
                                                 onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
-                                                className="glass-input w-full px-4 py-2.5 rounded-lg text-sm appearance-none cursor-pointer"
+                                                className="glass-input w-full px-4 py-2.5 rounded-lg text-sm appearance-auto pr-8 cursor-pointer"
                                             >
                                                 <option value="employee" className="bg-slate-50 text-slate-800">Employee / Agent</option>
                                                 <option value="manager"  className="bg-slate-50 text-slate-800">Department Manager</option>
@@ -254,7 +249,7 @@ function Admin() {
                                             <select
                                                 value={editForm.department}
                                                 onChange={(e) => setEditForm({ ...editForm, department: e.target.value })}
-                                                className="glass-input w-full px-4 py-2.5 rounded-lg text-sm appearance-none cursor-pointer"
+                                                className="glass-input w-full px-4 py-2.5 rounded-lg text-sm appearance-auto pr-8 cursor-pointer"
                                             >
                                                 <option value="" className="bg-slate-50 text-slate-800">None / Floating</option>
                                                 {departments.map((dept) => (
@@ -296,9 +291,9 @@ function Admin() {
                                 
                                 {/* 1. Avatar & Identity */}
                                 <div className="flex items-center gap-4 w-full lg:w-[35%] min-w-[250px]">
-                                    <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border border-slate-200 shadow-sm bg-slate-50 relative group-hover:bg-indigo-500/10 group-hover:border-indigo-500/30 transition-colors">
+                                    <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border border-slate-200 bg-slate-50 relative group-hover:bg-indigo-50 group-hover:border-indigo-200">
                                         <span className="text-slate-800 group-hover:text-indigo-600 font-bold text-lg uppercase tracking-wider">{user.email.charAt(0)}</span>
-                                        {user.role === 'admin' && <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-indigo-500 rounded-full border-2 border-slate-900 flex justify-center items-center"><Shield className="w-2.5 h-2.5 text-white"/></div>}
+                                        {user.role === 'admin' && <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-indigo-500 rounded-full border-2 border-white flex justify-center items-center"><Shield className="w-2.5 h-2.5 text-white"/></div>}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <h3 className="text-slate-800 font-bold truncate text-[16px] leading-tight mb-0.5 group-hover:text-indigo-600 transition-colors">{user.email.split('@')[0]}</h3>
@@ -339,17 +334,17 @@ function Admin() {
                                     </div>
                                     
                                     {/* Action Buttons */}
-                                    <div className="flex items-center gap-2 shrink-0 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <div className="flex items-center gap-2 shrink-0 lg:opacity-0 group-hover:opacity-100">
                                         <button
                                             onClick={() => startEdit(user)}
-                                            className="p-2 sm:p-2 bg-slate-50/80 text-slate-400 hover:bg-slate-50 hover:text-indigo-400 border border-slate-200 hover:border-indigo-500/30 rounded-lg transition-all shadow-sm"
+                                            className="p-2 sm:p-2 bg-slate-50 text-slate-500 hover:bg-slate-100 hover:text-indigo-600 border border-slate-200 rounded-lg"
                                             title="Edit Profile"
                                         >
                                             <Edit2 className="w-4 h-4" />
                                         </button>
                                         <button
                                             onClick={() => deleteUser(user._id, user.email)}
-                                            className="p-2 sm:p-2 bg-slate-50/80 text-slate-400 hover:bg-slate-50 hover:text-rose-400 border border-slate-200 hover:border-rose-500/30 rounded-lg transition-all shadow-sm"
+                                            className="p-2 sm:p-2 bg-slate-50 text-slate-500 hover:bg-red-50 hover:text-red-600 border border-slate-200 rounded-lg"
                                             title="Terminate User"
                                         >
                                             <Trash2 className="w-4 h-4" />
@@ -459,7 +454,7 @@ function CreateUserForm({ departments, onSuccess }) {
         <select
           value={form.role}
           onChange={(e) => setForm({ ...form, role: e.target.value })}
-          className="glass-input w-full px-4 py-2.5 rounded-xl text-sm appearance-none"
+          className="glass-input w-full px-4 py-2.5 rounded-xl text-sm appearance-auto pr-8"
         >
           <option value="employee" className="bg-white">Standard Employee</option>
           <option value="manager" className="bg-white">Department Manager</option>
@@ -471,7 +466,7 @@ function CreateUserForm({ departments, onSuccess }) {
         <select
           value={form.department}
           onChange={(e) => setForm({ ...form, department: e.target.value })}
-          className="glass-input w-full px-4 py-2.5 rounded-xl text-sm appearance-none"
+          className="glass-input w-full px-4 py-2.5 rounded-xl text-sm appearance-auto pr-8"
         >
           <option value="" className="bg-white">No Department</option>
           {departments.map((dept) => (
@@ -606,7 +601,7 @@ function DepartmentManagement({ departments, users, onRefresh }) {
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 relative z-10">
+    <div className="space-y-6 relative z-10">
       
       {/* Top Action Bar */}
       <div className="flex justify-between items-center bg-white border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-2 pl-4 rounded-xl border border-slate-100">
@@ -622,10 +617,7 @@ function DepartmentManagement({ departments, users, onRefresh }) {
 
       {/* Create Department Form */}
       {showCreateDept && (
-        <div className="glass-panel p-6 sm:p-8 animate-in fade-in duration-300 border-l-4 border-l-indigo-500 overflow-hidden relative">
-          <div className="absolute -right-10 -bottom-10 opacity-5 pointer-events-none">
-              <Building2 className="w-64 h-64 text-indigo-500" />
-          </div>
+        <div className="glass-panel p-6 sm:p-8 border-l-4 border-l-indigo-500 overflow-hidden relative">
           <h3 className="text-xl font-bold mb-6 text-slate-800 relative z-10">New Sector Registration</h3>
           <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
             <div>
@@ -644,7 +636,7 @@ function DepartmentManagement({ departments, users, onRefresh }) {
               <select
                 value={form.managerId}
                 onChange={(e) => setForm({ ...form, managerId: e.target.value })}
-                className="glass-input w-full px-4 py-2.5 rounded-xl text-sm appearance-none"
+                className="glass-input w-full px-4 py-2.5 rounded-xl text-sm appearance-auto pr-8"
               >
                 <option value="" className="bg-white">None Available</option>
                 {managers.map((m) => (
@@ -679,14 +671,14 @@ function DepartmentManagement({ departments, users, onRefresh }) {
       {departments.length === 0 ? (
         <div className="glass-panel py-16 text-center border-dashed border-slate-200">
           <Building2 className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-          <p className="text-slate-400 font-light">Network contains no active sectors. Awaiting registration.</p>
+          <p className="text-slate-500 font-medium">Network contains no active sectors. Awaiting registration.</p>
         </div>
       ) : (
         <div className="space-y-4">
           {departments.map((dept) => (
-            <div key={dept._id} className="glass-panel p-6 group transition-all hover:bg-slate-50/60 hover:shadow-lg border-l-2 hover:border-l-indigo-500">
+            <div key={dept._id} className="glass-panel p-6 group hover:bg-slate-50 border-l-2 border-l-transparent hover:border-l-indigo-500">
               {editingDept === dept._id ? (
-                    <div className="space-y-4 animate-in fade-in">
+                    <div className="space-y-4">
                         <h4 className="font-bold text-slate-700 border-b border-slate-100 pb-2">Reconfigure Sector Parameters</h4>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div>
@@ -703,7 +695,7 @@ function DepartmentManagement({ departments, users, onRefresh }) {
                                 <select
                                     value={editForm.managerId}
                                     onChange={(e) => setEditForm({ ...editForm, managerId: e.target.value })}
-                                    className="glass-input w-full p-2.5 rounded-lg text-sm appearance-none"
+                                    className="glass-input w-full p-2.5 rounded-lg text-sm appearance-auto pr-8"
                                 >
                                     <option value="" className="bg-white">Revoke Overseer</option>
                                     {managers.map((m) => (
@@ -764,17 +756,17 @@ function DepartmentManagement({ departments, users, onRefresh }) {
                         </div>
                     </div>
                   
-                    <div className="flex gap-2 shrink-0 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex gap-2 shrink-0 md:opacity-0 group-hover:opacity-100">
                         <button
                             onClick={() => startEditDept(dept)}
-                            className="p-2 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white text-sm rounded-lg transition-colors border border-indigo-500/20 shadow-sm"
+                            className="p-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 text-sm rounded-lg border border-indigo-100"
                             title="Configure"
                         >
                             <Edit2 className="w-4 h-4"/>
                         </button>
                         <button
                             onClick={() => deleteDept(dept._id, dept.name)}
-                            className="p-2 bg-rose-500/10 text-rose-400 hover:bg-rose-500 hover:text-white text-sm rounded-lg transition-colors border border-rose-500/20 shadow-sm"
+                            className="p-2 bg-rose-50 text-rose-600 hover:bg-rose-100 text-sm rounded-lg border border-rose-100"
                             title="Scuttle"
                         >
                             <Trash2 className="w-4 h-4"/>
