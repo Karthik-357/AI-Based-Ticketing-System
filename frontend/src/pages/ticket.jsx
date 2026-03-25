@@ -299,7 +299,7 @@ function TicketDetailsPage() {
 
             {/* Comments Section */}
             <div className="pt-2">
-              <CommentSection ticketId={id} />
+              <CommentSection ticketId={id} ticketStatus={ticket.status} />
             </div>
           </div>
         </div>
@@ -332,6 +332,10 @@ function TicketDetailsPage() {
               <div>
                 <p className="text-slate-400 text-[10px] uppercase font-bold tracking-widest mb-1">Assigned To</p>
                 <p className="font-semibold text-slate-800 break-words">{ticket.assignedTo?.email || <span className="text-rose-400 italic font-medium">Unassigned</span>}</p>
+              </div>
+              <div>
+                <p className="text-slate-400 text-[10px] uppercase font-bold tracking-widest mb-1">Raised By</p>
+                <p className="font-semibold text-slate-800 break-words">{ticket.createdBy?.email || <span className="text-slate-400 italic font-medium">Unknown</span>}</p>
               </div>
               <div className="flex gap-4">
                 <div className="flex-1">

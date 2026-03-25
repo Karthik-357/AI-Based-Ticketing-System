@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
-import { Users, Building2, UserPlus, Shield, Edit2, Trash2, CheckCircle, XCircle, Search, Mail, Settings, Briefcase, PlusCircle, Loader2 } from 'lucide-react';
+import { Users, Building2, UserPlus, Shield, Edit2, Trash2, CheckCircle, XCircle, Search, Mail, Settings, Briefcase, PlusCircle, Loader2, AlertTriangle } from 'lucide-react';
 import Loader from '../components/Loader';
 import toast from 'react-hot-toast';
 
@@ -12,6 +12,7 @@ function Admin() {
   const [editForm, setEditForm] = useState({})
   const [activeSection, setActiveSection] = useState("users")
   const [searchQuery, setSearchQuery] = useState('')
+  const [roleFilter, setRoleFilter] = useState('all')
   const [showCreateUser, setShowCreateUser] = useState(false)
   const navigate = useNavigate()
 
@@ -120,11 +121,20 @@ function Admin() {
     }
   }
   
-  const filteredUsers = users.filter(user => 
-    user.email.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    (user.department?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.role.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.email.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      (user.department?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.role.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
+    return matchesSearch && matchesRole;
+  });
+
+  const roleCounts = {
+    all: users.length,
+    admin: users.filter(u => u.role === 'admin').length,
+    manager: users.filter(u => u.role === 'manager').length,
+    employee: users.filter(u => u.role === 'employee').length,
+  };
 
   if (loading) return <Loader text="Loading System Administration..." />;
 
@@ -191,6 +201,36 @@ function Admin() {
                     {showCreateUser ? <XCircle className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
                     {showCreateUser ? 'Cancel Creation' : 'Register New User'}
                 </button>
+            </div>
+
+            {/* Role Filter Tabs */}
+            <div className="flex gap-2 bg-white border border-slate-100 rounded-xl p-1.5 shadow-sm overflow-x-auto">
+                {[
+                    { key: 'all', label: 'All Users', icon: <Users className="w-3.5 h-3.5" /> },
+                    { key: 'admin', label: 'Admins', icon: <Shield className="w-3.5 h-3.5" /> },
+                    { key: 'manager', label: 'Managers', icon: <Briefcase className="w-3.5 h-3.5" /> },
+                    { key: 'employee', label: 'Employees', icon: <UserPlus className="w-3.5 h-3.5" /> },
+                ].map(tab => (
+                    <button
+                        key={tab.key}
+                        onClick={() => setRoleFilter(tab.key)}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 whitespace-nowrap ${
+                            roleFilter === tab.key
+                                ? 'bg-indigo-600 text-white shadow-md'
+                                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                        }`}
+                    >
+                        {tab.icon}
+                        {tab.label}
+                        <span className={`text-xs px-1.5 py-0.5 rounded-md font-bold ${
+                            roleFilter === tab.key
+                                ? 'bg-white/20 text-white'
+                                : 'bg-slate-100 text-slate-400'
+                        }`}>
+                            {roleCounts[tab.key]}
+                        </span>
+                    </button>
+                ))}
             </div>
 
             {/* Create User Form Section */}

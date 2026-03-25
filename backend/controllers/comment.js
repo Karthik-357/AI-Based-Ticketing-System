@@ -24,6 +24,10 @@ export const addComment = async (req, res) => {
             return res.status(403).json({ message: "Access denied" })
         }
 
+        if (ticket.status === "CLOSED") {
+            return res.status(400).json({ message: "Cannot comment on a closed ticket" })
+        }
+
         const newComment = await Comment.create({
             ticketId,
             userId,

@@ -17,6 +17,9 @@ const resolveDepartment = async (deptInput) => {
     return dept._id
 }
 
+// Escape regex special characters in a string
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
 // Skills can come as ids or names; names are created if not present.
 const resolveSkills = async (skillsInput, departmentId = null) => {
     if (!skillsInput || !Array.isArray(skillsInput) || skillsInput.length === 0) return []
@@ -25,9 +28,21 @@ const resolveSkills = async (skillsInput, departmentId = null) => {
     for (const name of skillsInput) {
         const trimmed = name.trim()
         if (!trimmed) continue
-        let skill = await Skill.findOne({ name: { $regex: new RegExp(`^${trimmed}$`, 'i') } })
+        // Escape special regex characters for safe case-insensitive search
+        const escapedName = escapeRegex(trimmed)
+        let skill = await Skill.findOne({ name: { $regex: new RegExp(`^${escapedName}$`, 'i') } })
         if (!skill) {
-            skill = await Skill.create({ name: trimmed, department: departmentId })
+            try {
+                skill = await Skill.create({ name: trimmed, department: departmentId })
+            } catch (err) {
+                // Handle duplicate key error (skill may exist with different casing)
+                if (err.code === 11000) {
+                    skill = await Skill.findOne({ name: trimmed })
+                    if (!skill) throw err
+                } else {
+                    throw err
+                }
+            }
         } else if (!skill.department && departmentId) {
             // Keep existing skill linked to selected department if empty.
             skill.department = departmentId

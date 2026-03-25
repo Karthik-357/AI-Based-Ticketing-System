@@ -32,6 +32,13 @@ const getIdString = (value) => {
 const canManagerAccessTicket = async (user, ticket) => {
     const ticketDeptId = getIdString(ticket.department)
     const userDeptId = getIdString(user.department)
+    const userId = getIdString(user._id)
+    const createdById = getIdString(ticket.createdBy)
+
+    // Manager can always access tickets they created
+    if (createdById === userId) {
+        return true
+    }
 
     // Manager can access tickets in their department
     if (ticketDeptId === userDeptId) {
@@ -55,6 +62,14 @@ const canManagerAccessTicket = async (user, ticket) => {
         req.status === "pending" && deptEmployeeIdStrings.includes(getIdString(req.user))
     )
     if (hasPendingRequestForDeptEmployee) {
+        return true
+    }
+
+    // Manager can access tickets where their department employees are approved collaborators
+    const hasCollaboratorFromDept = (ticket.collaborators || []).some(c =>
+        deptEmployeeIdStrings.includes(getIdString(c))
+    )
+    if (hasCollaboratorFromDept) {
         return true
     }
 
@@ -204,7 +219,8 @@ export const getTickets = async (req, res) => {
             tickets = await Ticket.find({
                 $or: [
                     { department: userDeptId },
-                    { assignedTo: { $in: departmentEmployees } }
+                    { assignedTo: { $in: departmentEmployees } },
+                    { collaborators: { $in: departmentEmployees } }
                 ]
             })
                 .populate(ticketPopulateOpts)
@@ -260,7 +276,8 @@ export const getTickets = async (req, res) => {
             tickets = await Ticket.find({
                 $or: [
                     { department: managerDeptId },
-                    { assignedTo: { $in: departmentEmployees } }
+                    { assignedTo: { $in: departmentEmployees } },
+                    { collaborators: { $in: departmentEmployees } }
                 ]
             })
                 .populate(ticketPopulateOpts)

@@ -145,6 +145,7 @@ function Tickets() {
           { id: 'raised', label: 'Tickets Raised' },
           { id: 'assigned', label: 'Tickets Assigned' },
           { id: 'collaborating', label: 'Collaborating' },
+          ...(userRole === "manager" ? [{ id: 'department', label: 'Department Tickets' }] : []),
           ...(userRole === "manager" || userRole === "admin" ? [{ id: 'collab_pending', label: 'Pending Approvals' }] : []),
           ...(userRole === "admin" ? [{ id: 'all', label: 'All Tickets' }] : [])
         ].map(tab => (
@@ -246,11 +247,13 @@ function Tickets() {
                   ? "No tickets assigned to you yet."
                   : activeTab === "collaborating"
                     ? "You're not collaborating on any tickets yet."
-                    : activeTab === "collab_pending"
-                      ? "No pending collaboration requests to review."
-                      : activeTab === "all"
-                        ? "No tickets exist in the system yet."
-                        : "No tickets yet."}
+                    : activeTab === "department"
+                      ? "No tickets found in your department."
+                      : activeTab === "collab_pending"
+                        ? "No pending collaboration requests to review."
+                        : activeTab === "all"
+                          ? "No tickets exist in the system yet."
+                          : "No tickets yet."}
             </p>
           </div>
         ) : (
@@ -283,7 +286,7 @@ function Tickets() {
                           {new Date(ticket.createdAt).toLocaleDateString()}
                        </div>
                        
-                       {(activeTab === "assigned" || activeTab === "all") && ticket.createdBy?.email && (
+                       {activeTab !== "raised" && ticket.createdBy?.email && (
                           <div className="flex items-center gap-1.5 text-slate-500 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
                              <User className="w-3 h-3" />
                              Raised by: <span className="text-slate-700">{ticket.createdBy.email.split('@')[0]}</span>
