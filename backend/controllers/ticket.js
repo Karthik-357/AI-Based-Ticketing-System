@@ -110,7 +110,7 @@ const resolveDepartment = async (input) => {
 
 export const createTicket = async (req, res) => {
     try {
-        const { title, description, department, category, priority } = req.body
+        const { title, description, department, category, priority, assignedTo } = req.body
         if (!title || !description) {
             return res.status(400).json({ message: "Title and description are required" })
         }
@@ -127,15 +127,41 @@ export const createTicket = async (req, res) => {
             return res.status(400).json({ message: "A valid department is required to create a ticket." })
         }
 
+        // Validate assignedTo if provided (manual assignment mode)
+        let validatedAssignee = null
+        if (assignedTo) {
+            const assignee = await User.findById(assignedTo)
+            if (!assignee) {
+                return res.status(400).json({ message: "Selected assignee not found" })
+            }
+            if (assignee.role !== "employee") {
+                return res.status(400).json({ message: "Tickets can only be assigned to employees" })
+            }
+            // Ensure assignee belongs to the selected department
+            const assigneeDeptId = assignee.department?.toString() || assignee.department
+            if (assigneeDeptId !== departmentId.toString()) {
+                return res.status(400).json({ message: "Assignee must belong to the selected department" })
+            }
+            validatedAssignee = assignee._id
+        }
+
         const ticketNumber = await getNextSequence("ticketNumber")
-        const newTicket = await Ticket.create({
+        const ticketData = {
             ticketNumber,
             title,
             description,
             department: departmentId,
             priority,
             createdBy: req.user._id.toString()
-        })
+        }
+
+        // If manual assignment, set assignedTo and status
+        if (validatedAssignee) {
+            ticketData.assignedTo = validatedAssignee
+            ticketData.status = "IN_PROGRESS"
+        }
+
+        const newTicket = await Ticket.create(ticketData)
 
         await TicketActivity.create({
             ticketId: newTicket._id,
@@ -143,13 +169,25 @@ export const createTicket = async (req, res) => {
             action: 'CREATED'
         })
 
+        // Log manual assignment activity if applicable
+        if (validatedAssignee) {
+            const assignee = await User.findById(validatedAssignee)
+            await TicketActivity.create({
+                ticketId: newTicket._id,
+                performedBy: req.user._id,
+                action: 'ASSIGNED',
+                newValue: assignee.email
+            })
+        }
+
         await inngest.send(({
             name: "ticket/created",
             data: {
                 ticketId: newTicket._id.toString(),
                 title,
                 description,
-                createdBy: req.user._id.toString()
+                createdBy: req.user._id.toString(),
+                isManualAssignment: !!validatedAssignee
             }
         }));
         return res.status(201).json({

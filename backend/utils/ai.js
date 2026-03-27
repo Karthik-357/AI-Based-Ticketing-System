@@ -13,11 +13,12 @@ const analyzeTicket = async (ticket, availableSkills = []) => {
         }),
         name: "AI Ticket Triage Assistant",
         system: `You are an expert AI assistant that processes technical support tickets,
-        
+
 Your job is to:
 1. Summarize the issue.
 2. Provide helpful notes and resource links for human moderators.
 3. List relevant technical skills required.
+4. Determine the appropriate priority level based on impact and urgency.
 ${skillConstraint}
 
 IMPORTANT:
@@ -32,19 +33,25 @@ Repeat: Do not wrap your output in markdown or code fences.`,
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             const response = await supportAgent.run(`You are a ticket triage agent. Only return a strict JSON object with no extra text, headers, or markdown.
-        
+
 Analyze the following support ticket and provide a JSON object with :
 
 - summary: A short 1-2 sentence summary of the issue.
 - helpfulNotes: A detailed technical explanation that a moderator can use to solve this issue. Include useful external links or resources if possible.
 - relatedSkills: An array of relevant skills required to solve the issue.${availableSkills.length > 0 ? ` You MUST only choose from these skills: ${JSON.stringify(availableSkills)}. If none match, return an empty array [].` : ` (e.g., ["React", "MongoDB", "Payroll", "Hardware"])`}
+- suggestedPriority: One of "low", "medium", "high", or "critical" based on:
+  * low: Minor issues, cosmetic problems, feature requests with no urgency
+  * medium: Standard issues that affect productivity but have workarounds
+  * high: Significant issues affecting multiple users or business operations
+  * critical: System-wide outages, security issues, or complete blockers
 
 Respond only in this JSON format and do not include any other text or markdown in the answer:
 
 {
 "summary": "Short summary of the ticket",
 "helpfulNotes": "Here are useful tips...",
-"relatedSkills": ["React", "Node.js"]
+"relatedSkills": ["React", "Node.js"],
+"suggestedPriority": "medium"
 }
 
 ---
@@ -186,8 +193,9 @@ Your job is to:
 1. Summarize the issue.
 2. Provide helpful notes and resource links for human moderators.
 3. List relevant technical skills required.
+4. Determine the appropriate priority level based on impact and urgency.
 ${skillConstraint}
-${activeIncidents.length > 0 ? '4. Check if this ticket matches any known active incident.' : ''}
+${activeIncidents.length > 0 ? '5. Check if this ticket matches any known active incident.' : ''}
 
 IMPORTANT:
 - Respond with *only* valid raw JSON.
@@ -203,6 +211,11 @@ IMPORTANT:
 - summary: A short 1-2 sentence summary of the issue.
 - helpfulNotes: A detailed technical explanation that a moderator can use to solve this issue. Include useful external links or resources if possible.
 - relatedSkills: An array of relevant skills required to solve the issue.${availableSkills.length > 0 ? ` You MUST only choose from these skills: ${JSON.stringify(availableSkills)}. If none match, return an empty array [].` : ` (e.g., ["React", "MongoDB", "Payroll", "Hardware"])`}
+- suggestedPriority: One of "low", "medium", "high", or "critical" based on:
+  * low: Minor issues, cosmetic problems, feature requests with no urgency
+  * medium: Standard issues that affect productivity but have workarounds
+  * high: Significant issues affecting multiple users or business operations
+  * critical: System-wide outages, security issues, or complete blockers
 - matchedIncidentId: ${activeIncidents.length > 0 ? 'The ID of the matching active incident, or null if no match.' : 'null (no active incidents to check)'}
 ${incidentContext}
 
@@ -211,6 +224,7 @@ Respond only in this JSON format:
   "summary": "Short summary of the ticket",
   "helpfulNotes": "Here are useful tips...",
   "relatedSkills": ["React", "Node.js"],
+  "suggestedPriority": "medium",
   "matchedIncidentId": null
 }
 

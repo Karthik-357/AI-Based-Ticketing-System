@@ -269,3 +269,28 @@ export const getCollaboratorCandidates = async (req, res) => {
         });
     }
 };
+
+// Get employees by department for ticket assignment (available to all authenticated users)
+export const getEmployeesByDepartment = async (req, res) => {
+    try {
+        const { departmentId } = req.query;
+
+        if (!departmentId) {
+            return res.status(400).json({ error: "Department ID is required" });
+        }
+
+        const employees = await User.find({
+            role: "employee",
+            department: departmentId
+        })
+            .select("_id email skills")
+            .populate('skills', 'name _id');
+
+        return res.json(employees);
+    } catch (error) {
+        res.status(500).json({
+            error: "Failed to fetch employees",
+            details: error.message
+        });
+    }
+};

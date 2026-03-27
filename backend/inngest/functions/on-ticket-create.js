@@ -13,7 +13,7 @@ export const onTicketCreated = inngest.createFunction(
     { event: "ticket/created" },
     async ({ event, step }) => {
         try {
-            const { ticketId } = event.data
+            const { ticketId, isManualAssignment } = event.data
 
             const ticket = await step.run("fetch-ticket", async () => {
                 const ticketObject = await Ticket.findById(ticketId);
@@ -90,13 +90,25 @@ export const onTicketCreated = inngest.createFunction(
                     }
                 }
 
-                // Link ticket to incident
-                await Ticket.findByIdAndUpdate(ticket._id, {
+                // Check if ticket needs priority from AI
+                const currentTicket = await Ticket.findById(ticket._id);
+                const updateData = {
                     incident: incident._id,
                     helpfulNotes: aiResponse.helpfulNotes,
                     status: "IN_PROGRESS",
                     ...(skillIds.length > 0 ? { relatedSkills: skillIds } : {}),
-                });
+                };
+
+                // Set AI-suggested priority only if ticket doesn't already have one
+                if (!currentTicket.priority && aiResponse.suggestedPriority) {
+                    const validPriorities = ["low", "medium", "high", "critical"];
+                    if (validPriorities.includes(aiResponse.suggestedPriority)) {
+                        updateData.priority = aiResponse.suggestedPriority;
+                    }
+                }
+
+                // Link ticket to incident
+                await Ticket.findByIdAndUpdate(ticket._id, updateData);
 
                 // Add ticket to incident's tickets array
                 await Incident.findByIdAndUpdate(incident._id, {
@@ -177,9 +189,65 @@ export const onTicketCreated = inngest.createFunction(
                 return { success: true, linkedToIncident: true };
             }
 
-            // Normal flow — no incident match. Save AI results and assign employee.
+            // Handle manual assignment mode - skip auto-assignment but still save AI results
+            if (isManualAssignment) {
+                await step.run("save-ai-results-manual", async () => {
+                    if (aiResponse) {
+                        const skillNames = (aiResponse.relatedSkills || []).map(s => s.toLowerCase());
+                        const skillDocs = await Skill.find({
+                            $expr: {
+                                $in: [{ $toLower: "$name" }, skillNames]
+                            }
+                        });
+                        const skillIds = skillDocs.map(s => s._id);
+
+                        const currentTicket = await Ticket.findById(ticket._id);
+                        const updateData = {
+                            helpfulNotes: aiResponse.helpfulNotes,
+                            relatedSkills: skillIds
+                        };
+
+                        // Set AI-suggested priority only if ticket doesn't already have one
+                        if (!currentTicket.priority && aiResponse.suggestedPriority) {
+                            const validPriorities = ["low", "medium", "high", "critical"];
+                            if (validPriorities.includes(aiResponse.suggestedPriority)) {
+                                updateData.priority = aiResponse.suggestedPriority;
+                                console.log(`[AI] Setting priority to: ${aiResponse.suggestedPriority}`);
+                            }
+                        }
+
+                        await Ticket.findByIdAndUpdate(ticket._id, updateData);
+                    }
+                });
+
+                // Send email to manually assigned user
+                await step.run("send-manual-assignment-email", async () => {
+                    const currentTicket = await Ticket.findById(ticket._id);
+                    if (currentTicket.assignedTo) {
+                        const assignee = await User.findById(currentTicket.assignedTo);
+                        if (assignee) {
+                            try {
+                                await sendMail(
+                                    assignee.email,
+                                    "Ticket Assigned",
+                                    `A new ticket has been assigned to you: ${currentTicket.title}`
+                                );
+                            } catch (emailErr) {
+                                console.error("Failed to send assignment email:", emailErr.message);
+                            }
+                        }
+                    }
+                });
+
+                console.log(`[Ticket Created] Manual assignment - skipped auto-assignment.`);
+                return { success: true, manualAssignment: true };
+            }
+
+            // Normal flow — no incident match, no manual assignment. Save AI results and assign employee.
             const relatedSkillIds = await step.run("save-ai-results", async () => {
                 let skillIds = []
+                const currentTicket = await Ticket.findById(ticket._id)
+
                 if (aiResponse) {
                     const skillNames = (aiResponse.relatedSkills || []).map(s => s.toLowerCase());
                     const skillDocs = await Skill.find({
@@ -189,11 +257,22 @@ export const onTicketCreated = inngest.createFunction(
                     });
                     skillIds = skillDocs.map(s => s._id);
 
-                    await Ticket.findByIdAndUpdate(ticket._id, {
+                    const updateData = {
                         helpfulNotes: aiResponse.helpfulNotes,
                         status: "IN_PROGRESS",
                         relatedSkills: skillIds
-                    })
+                    }
+
+                    // Set AI-suggested priority only if ticket doesn't already have one
+                    if (!currentTicket.priority && aiResponse.suggestedPriority) {
+                        const validPriorities = ["low", "medium", "high", "critical"]
+                        if (validPriorities.includes(aiResponse.suggestedPriority)) {
+                            updateData.priority = aiResponse.suggestedPriority
+                            console.log(`[AI] Setting priority to: ${aiResponse.suggestedPriority}`)
+                        }
+                    }
+
+                    await Ticket.findByIdAndUpdate(ticket._id, updateData)
                 } else {
                     // Fallback: keep workflow moving even if AI fails.
                     await Ticket.findByIdAndUpdate(ticket._id, {
