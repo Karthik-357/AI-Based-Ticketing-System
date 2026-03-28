@@ -9,10 +9,31 @@ function Tickets() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [isAdvancedMode, setIsAdvancedMode] = useState(false)
-  const [form, setForm] = useState({ title: "", description: "", category: "", priority: "", assignedTo: "" })
+  const [form, setForm] = useState({ 
+    title: "", 
+    description: "", 
+    category: "", 
+    ticketType: "", 
+    impact: "", 
+    urgency: "", 
+    assignedTo: "" 
+  })
   const [activeTab, setActiveTab] = useState("raised")
   const navigate = useNavigate()
   const userRole = localStorage.getItem("userRole")
+
+  // Calculate priority based on impact and urgency matrix
+  const calculatePriority = (impact, urgency) => {
+    if (!impact || !urgency) return null
+    const matrix = {
+      '1-1': 'low',    '1-2': 'low',    '1-3': 'medium',
+      '2-1': 'low',    '2-2': 'medium', '2-3': 'high',
+      '3-1': 'medium', '3-2': 'high',   '3-3': 'critical'
+    }
+    return matrix[`${impact}-${urgency}`] || null
+  }
+
+  const calculatedPriority = calculatePriority(form.impact, form.urgency)
 
   useEffect(() => {
     fetchDepartments()
@@ -109,12 +130,14 @@ function Tickets() {
         category: form.category
       }
 
-      // In advanced mode, include priority and assignedTo
+      // In advanced mode, include ticketType, impact, urgency, and assignedTo
       if (isAdvancedMode) {
-        if (form.priority) payload.priority = form.priority
+        if (form.ticketType) payload.ticketType = form.ticketType
+        if (form.impact) payload.impact = parseInt(form.impact)
+        if (form.urgency) payload.urgency = parseInt(form.urgency)
         if (form.assignedTo) payload.assignedTo = form.assignedTo
       }
-      // In simple mode, don't send priority - let AI determine it
+      // In simple mode, don't send these fields - let AI determine them
 
       const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/tickets`,
         {
@@ -128,7 +151,7 @@ function Tickets() {
       )
       const data = await res.json()
       if (res.ok) {
-        setForm({ title: "", description: "", category: "", priority: "", assignedTo: "" })
+        setForm({ title: "", description: "", category: "", ticketType: "", impact: "", urgency: "", assignedTo: "" })
         setShowForm(false)
         setIsAdvancedMode(false)
         setEmployees([])
@@ -258,12 +281,12 @@ function Tickets() {
             {isAdvancedMode ? (
               <div className="flex items-start gap-2">
                 <Settings2 className="w-4 h-4 mt-0.5 shrink-0" />
-                <span><strong>Advanced Mode:</strong> Manually specify priority and assignee. AI will still provide helpful notes for the ticket.</span>
+                <span><strong>Advanced Mode:</strong> Manually specify ticket type, impact, urgency, and assignee. Priority is auto-calculated from impact × urgency.</span>
               </div>
             ) : (
               <div className="flex items-start gap-2">
                 <Sparkles className="w-4 h-4 mt-0.5 shrink-0" />
-                <span><strong>Simple Mode:</strong> AI will automatically analyze your ticket, determine priority, and assign to the best available expert.</span>
+                <span><strong>Simple Mode:</strong> AI will automatically analyze your ticket, determine type, impact, urgency, priority, and assign to the best available expert.</span>
               </div>
             )}
           </div>
@@ -319,47 +342,98 @@ function Tickets() {
                   Advanced Options
                 </div>
 
+                {/* Ticket Type */}
+                <div>
+                  <label className="block text-slate-500 text-xs font-bold uppercase tracking-wider mb-2 ml-1">Ticket Type</label>
+                  <select
+                    name="ticketType"
+                    value={form.ticketType}
+                    onChange={handleChange}
+                    className="glass-input pr-8"
+                  >
+                    <option value="">Let AI decide</option>
+                    <option value="service_request">Service Request</option>
+                    <option value="problem">Problem</option>
+                    <option value="change_request">Change Request</option>
+                    <option value="access_request">Access Request</option>
+                    <option value="query">Query / Question</option>
+                    <option value="bug">Bug / Defect</option>
+                  </select>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Impact */}
                   <div>
-                    <label className="block text-slate-500 text-xs font-bold uppercase tracking-wider mb-2 ml-1">Priority Level</label>
+                    <label className="block text-slate-500 text-xs font-bold uppercase tracking-wider mb-2 ml-1">Impact</label>
                     <select
-                      name="priority"
-                      value={form.priority}
+                      name="impact"
+                      value={form.impact}
                       onChange={handleChange}
                       className="glass-input pr-8"
                     >
                       <option value="">Let AI decide</option>
-                      <option value="low">Low Priority</option>
-                      <option value="medium">Medium Priority</option>
-                      <option value="high">High Priority</option>
-                      <option value="critical">Critical / Blocker</option>
+                      <option value="1">1 - Low (Individual user)</option>
+                      <option value="2">2 - Moderate (Team/Department)</option>
+                      <option value="3">3 - High (Organization-wide)</option>
                     </select>
                   </div>
 
+                  {/* Urgency */}
                   <div>
-                    <label className="block text-slate-500 text-xs font-bold uppercase tracking-wider mb-2 ml-1">Assign To</label>
+                    <label className="block text-slate-500 text-xs font-bold uppercase tracking-wider mb-2 ml-1">Urgency</label>
                     <select
-                      name="assignedTo"
-                      value={form.assignedTo}
+                      name="urgency"
+                      value={form.urgency}
                       onChange={handleChange}
                       className="glass-input pr-8"
-                      disabled={!form.category || employees.length === 0}
                     >
-                      <option value="">Let AI assign (recommended)</option>
-                      {employees.map((emp) => (
-                        <option key={emp._id} value={emp._id}>
-                          {emp.email.split('@')[0]}
-                          {emp.skills?.length > 0 && ` (${emp.skills.map(s => s.name).join(', ')})`}
-                        </option>
-                      ))}
+                      <option value="">Let AI decide</option>
+                      <option value="1">1 - Low (Can wait)</option>
+                      <option value="2">2 - Moderate (Soon)</option>
+                      <option value="3">3 - High (Immediate)</option>
                     </select>
-                    {!form.category && (
-                      <p className="text-xs text-slate-400 mt-1 ml-1">Select a department first to see available assignees</p>
-                    )}
-                    {form.category && employees.length === 0 && (
-                      <p className="text-xs text-amber-500 mt-1 ml-1">No employees found in this department</p>
-                    )}
                   </div>
+                </div>
+
+                {/* Auto-calculated Priority Display */}
+                {(form.impact && form.urgency) && (
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-slate-600">Auto-calculated Priority:</span>
+                      <span className={`${getPriorityBadge(calculatedPriority)} uppercase`}>
+                        {calculatedPriority}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Priority is calculated from Impact × Urgency matrix
+                    </p>
+                  </div>
+                )}
+
+                {/* Assign To */}
+                <div>
+                  <label className="block text-slate-500 text-xs font-bold uppercase tracking-wider mb-2 ml-1">Assign To</label>
+                  <select
+                    name="assignedTo"
+                    value={form.assignedTo}
+                    onChange={handleChange}
+                    className="glass-input pr-8"
+                    disabled={!form.category || employees.length === 0}
+                  >
+                    <option value="">Let AI assign (recommended)</option>
+                    {employees.map((emp) => (
+                      <option key={emp._id} value={emp._id}>
+                        {emp.email.split('@')[0]}
+                        {emp.skills?.length > 0 && ` (${emp.skills.map(s => s.name).join(', ')})`}
+                      </option>
+                    ))}
+                  </select>
+                  {!form.category && (
+                    <p className="text-xs text-slate-400 mt-1 ml-1">Select a department first to see available assignees</p>
+                  )}
+                  {form.category && employees.length === 0 && (
+                    <p className="text-xs text-amber-500 mt-1 ml-1">No employees found in this department</p>
+                  )}
                 </div>
               </div>
             )}

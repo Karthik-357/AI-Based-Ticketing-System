@@ -7,6 +7,12 @@ const ticketSchema = new mongoose.Schema({
     status: { type: String, default: "TODO", enum: ["TODO", "IN_PROGRESS", "DONE", "CLOSED"] },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     assignedTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    ticketType: { 
+        type: String, 
+        enum: ["service_request", "problem", "change_request", "access_request", "query", "bug"] 
+    },
+    impact: { type: Number, enum: [1, 2, 3] },
+    urgency: { type: Number, enum: [1, 2, 3] },
     priority: { type: String, enum: ["low", "medium", "high", "critical"] },
     department: { type: mongoose.Schema.Types.ObjectId, ref: 'Department' },
     helpfulNotes: String,

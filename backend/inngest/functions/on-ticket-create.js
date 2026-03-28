@@ -8,6 +8,16 @@ import { NonRetriableError } from "inngest";
 import { sendMail } from "../../utils/mailer.js";
 import analyzeTicket, { analyzeTicketWithIncidentCheck } from "../../utils/ai.js";
 
+// Calculate priority based on impact and urgency matrix
+const calculatePriority = (impact, urgency) => {
+    const matrix = {
+        '1-1': 'low',    '1-2': 'low',    '1-3': 'medium',
+        '2-1': 'low',    '2-2': 'medium', '2-3': 'high',
+        '3-1': 'medium', '3-2': 'high',   '3-3': 'critical'
+    }
+    return matrix[`${impact}-${urgency}`] || 'medium'
+}
+
 export const onTicketCreated = inngest.createFunction(
     { id: "on-ticket-created", retries: 1 },
     { event: "ticket/created" },
@@ -99,11 +109,37 @@ export const onTicketCreated = inngest.createFunction(
                     ...(skillIds.length > 0 ? { relatedSkills: skillIds } : {}),
                 };
 
-                // Set AI-suggested priority only if ticket doesn't already have one
-                if (!currentTicket.priority && aiResponse.suggestedPriority) {
-                    const validPriorities = ["low", "medium", "high", "critical"];
-                    if (validPriorities.includes(aiResponse.suggestedPriority)) {
-                        updateData.priority = aiResponse.suggestedPriority;
+                // Set AI-suggested ticketType if not already set
+                if (!currentTicket.ticketType && aiResponse.suggestedTicketType) {
+                    const validTypes = ["service_request", "problem", "change_request", "access_request", "query", "bug"];
+                    if (validTypes.includes(aiResponse.suggestedTicketType)) {
+                        updateData.ticketType = aiResponse.suggestedTicketType;
+                    }
+                }
+
+                // Set AI-suggested impact if not already set
+                if (!currentTicket.impact && aiResponse.suggestedImpact) {
+                    const impactNum = Number(aiResponse.suggestedImpact);
+                    if ([1, 2, 3].includes(impactNum)) {
+                        updateData.impact = impactNum;
+                    }
+                }
+
+                // Set AI-suggested urgency if not already set
+                if (!currentTicket.urgency && aiResponse.suggestedUrgency) {
+                    const urgencyNum = Number(aiResponse.suggestedUrgency);
+                    if ([1, 2, 3].includes(urgencyNum)) {
+                        updateData.urgency = urgencyNum;
+                    }
+                }
+
+                // Calculate priority from impact/urgency if ticket doesn't have one
+                if (!currentTicket.priority) {
+                    const finalImpact = updateData.impact || currentTicket.impact;
+                    const finalUrgency = updateData.urgency || currentTicket.urgency;
+                    if (finalImpact && finalUrgency) {
+                        updateData.priority = calculatePriority(finalImpact, finalUrgency);
+                        console.log(`[AI] Calculated priority: ${updateData.priority} (impact: ${finalImpact}, urgency: ${finalUrgency})`);
                     }
                 }
 
@@ -207,12 +243,37 @@ export const onTicketCreated = inngest.createFunction(
                             relatedSkills: skillIds
                         };
 
-                        // Set AI-suggested priority only if ticket doesn't already have one
-                        if (!currentTicket.priority && aiResponse.suggestedPriority) {
-                            const validPriorities = ["low", "medium", "high", "critical"];
-                            if (validPriorities.includes(aiResponse.suggestedPriority)) {
-                                updateData.priority = aiResponse.suggestedPriority;
-                                console.log(`[AI] Setting priority to: ${aiResponse.suggestedPriority}`);
+                        // Set AI-suggested ticketType if not already set
+                        if (!currentTicket.ticketType && aiResponse.suggestedTicketType) {
+                            const validTypes = ["service_request", "problem", "change_request", "access_request", "query", "bug"];
+                            if (validTypes.includes(aiResponse.suggestedTicketType)) {
+                                updateData.ticketType = aiResponse.suggestedTicketType;
+                            }
+                        }
+
+                        // Set AI-suggested impact if not already set
+                        if (!currentTicket.impact && aiResponse.suggestedImpact) {
+                            const impactNum = Number(aiResponse.suggestedImpact);
+                            if ([1, 2, 3].includes(impactNum)) {
+                                updateData.impact = impactNum;
+                            }
+                        }
+
+                        // Set AI-suggested urgency if not already set
+                        if (!currentTicket.urgency && aiResponse.suggestedUrgency) {
+                            const urgencyNum = Number(aiResponse.suggestedUrgency);
+                            if ([1, 2, 3].includes(urgencyNum)) {
+                                updateData.urgency = urgencyNum;
+                            }
+                        }
+
+                        // Calculate priority from impact/urgency if ticket doesn't have one
+                        if (!currentTicket.priority) {
+                            const finalImpact = updateData.impact || currentTicket.impact;
+                            const finalUrgency = updateData.urgency || currentTicket.urgency;
+                            if (finalImpact && finalUrgency) {
+                                updateData.priority = calculatePriority(finalImpact, finalUrgency);
+                                console.log(`[AI] Calculated priority: ${updateData.priority} (impact: ${finalImpact}, urgency: ${finalUrgency})`);
                             }
                         }
 
@@ -263,12 +324,40 @@ export const onTicketCreated = inngest.createFunction(
                         relatedSkills: skillIds
                     }
 
-                    // Set AI-suggested priority only if ticket doesn't already have one
-                    if (!currentTicket.priority && aiResponse.suggestedPriority) {
-                        const validPriorities = ["low", "medium", "high", "critical"]
-                        if (validPriorities.includes(aiResponse.suggestedPriority)) {
-                            updateData.priority = aiResponse.suggestedPriority
-                            console.log(`[AI] Setting priority to: ${aiResponse.suggestedPriority}`)
+                    // Set AI-suggested ticketType if not already set
+                    if (!currentTicket.ticketType && aiResponse.suggestedTicketType) {
+                        const validTypes = ["service_request", "problem", "change_request", "access_request", "query", "bug"];
+                        if (validTypes.includes(aiResponse.suggestedTicketType)) {
+                            updateData.ticketType = aiResponse.suggestedTicketType;
+                            console.log(`[AI] Setting ticketType to: ${aiResponse.suggestedTicketType}`);
+                        }
+                    }
+
+                    // Set AI-suggested impact if not already set
+                    if (!currentTicket.impact && aiResponse.suggestedImpact) {
+                        const impactNum = Number(aiResponse.suggestedImpact);
+                        if ([1, 2, 3].includes(impactNum)) {
+                            updateData.impact = impactNum;
+                            console.log(`[AI] Setting impact to: ${impactNum}`);
+                        }
+                    }
+
+                    // Set AI-suggested urgency if not already set
+                    if (!currentTicket.urgency && aiResponse.suggestedUrgency) {
+                        const urgencyNum = Number(aiResponse.suggestedUrgency);
+                        if ([1, 2, 3].includes(urgencyNum)) {
+                            updateData.urgency = urgencyNum;
+                            console.log(`[AI] Setting urgency to: ${urgencyNum}`);
+                        }
+                    }
+
+                    // Calculate priority from impact/urgency if ticket doesn't have one
+                    if (!currentTicket.priority) {
+                        const finalImpact = updateData.impact || currentTicket.impact;
+                        const finalUrgency = updateData.urgency || currentTicket.urgency;
+                        if (finalImpact && finalUrgency) {
+                            updateData.priority = calculatePriority(finalImpact, finalUrgency);
+                            console.log(`[AI] Calculated priority: ${updateData.priority} (impact: ${finalImpact}, urgency: ${finalUrgency})`);
                         }
                     }
 

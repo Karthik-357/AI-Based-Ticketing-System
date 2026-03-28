@@ -108,9 +108,19 @@ const resolveDepartment = async (input) => {
     return dept._id
 }
 
+// Calculate priority based on impact and urgency matrix
+const calculatePriority = (impact, urgency) => {
+    const matrix = {
+        '1-1': 'low',    '1-2': 'low',    '1-3': 'medium',
+        '2-1': 'low',    '2-2': 'medium', '2-3': 'high',
+        '3-1': 'medium', '3-2': 'high',   '3-3': 'critical'
+    }
+    return matrix[`${impact}-${urgency}`] || 'medium'
+}
+
 export const createTicket = async (req, res) => {
     try {
-        const { title, description, department, category, priority, assignedTo } = req.body
+        const { title, description, department, category, priority, assignedTo, ticketType, impact, urgency } = req.body
         if (!title || !description) {
             return res.status(400).json({ message: "Title and description are required" })
         }
@@ -146,12 +156,22 @@ export const createTicket = async (req, res) => {
         }
 
         const ticketNumber = await getNextSequence("ticketNumber")
+        
+        // Calculate priority from impact/urgency if both provided, otherwise use provided priority
+        let calculatedPriority = priority
+        if (impact && urgency) {
+            calculatedPriority = calculatePriority(impact, urgency)
+        }
+        
         const ticketData = {
             ticketNumber,
             title,
             description,
             department: departmentId,
-            priority,
+            priority: calculatedPriority,
+            ticketType,
+            impact,
+            urgency,
             createdBy: req.user._id.toString()
         }
 

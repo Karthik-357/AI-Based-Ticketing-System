@@ -12,13 +12,14 @@ const analyzeTicket = async (ticket, availableSkills = []) => {
             apiKey: process.env.GEMINI_API_KEY,
         }),
         name: "AI Ticket Triage Assistant",
-        system: `You are an expert AI assistant that processes technical support tickets,
+        system: `You are an expert AI assistant that processes technical support tickets using ITIL best practices.
 
 Your job is to:
 1. Summarize the issue.
 2. Provide helpful notes and resource links for human moderators.
 3. List relevant technical skills required.
-4. Determine the appropriate priority level based on impact and urgency.
+4. Classify the ticket type.
+5. Assess impact and urgency levels.
 ${skillConstraint}
 
 IMPORTANT:
@@ -34,16 +35,26 @@ Repeat: Do not wrap your output in markdown or code fences.`,
         try {
             const response = await supportAgent.run(`You are a ticket triage agent. Only return a strict JSON object with no extra text, headers, or markdown.
 
-Analyze the following support ticket and provide a JSON object with :
+Analyze the following support ticket and provide a JSON object with:
 
 - summary: A short 1-2 sentence summary of the issue.
 - helpfulNotes: A detailed technical explanation that a moderator can use to solve this issue. Include useful external links or resources if possible.
 - relatedSkills: An array of relevant skills required to solve the issue.${availableSkills.length > 0 ? ` You MUST only choose from these skills: ${JSON.stringify(availableSkills)}. If none match, return an empty array [].` : ` (e.g., ["React", "MongoDB", "Payroll", "Hardware"])`}
-- suggestedPriority: One of "low", "medium", "high", or "critical" based on:
-  * low: Minor issues, cosmetic problems, feature requests with no urgency
-  * medium: Standard issues that affect productivity but have workarounds
-  * high: Significant issues affecting multiple users or business operations
-  * critical: System-wide outages, security issues, or complete blockers
+- suggestedTicketType: One of "service_request", "problem", "change_request", "access_request", "query", or "bug" based on:
+  * service_request: Standard request for a service (e.g., new equipment, software installation)
+  * problem: Root cause investigation for recurring issues
+  * change_request: Request to modify or update existing systems/configurations
+  * access_request: Permission, account access, or credential-related requests
+  * query: General inquiry, question, or information request
+  * bug: Software bug, defect, or error report
+- suggestedImpact: A number 1, 2, or 3 based on scope of effect:
+  * 1: Low - Affects only an individual user
+  * 2: Moderate - Affects a team or department
+  * 3: High - Affects the entire organization or critical business operations
+- suggestedUrgency: A number 1, 2, or 3 based on time sensitivity:
+  * 1: Low - Can wait, no immediate deadline
+  * 2: Moderate - Needs attention soon but not immediately
+  * 3: High - Needs immediate attention, time-critical
 
 Respond only in this JSON format and do not include any other text or markdown in the answer:
 
@@ -51,7 +62,9 @@ Respond only in this JSON format and do not include any other text or markdown i
 "summary": "Short summary of the ticket",
 "helpfulNotes": "Here are useful tips...",
 "relatedSkills": ["React", "Node.js"],
-"suggestedPriority": "medium"
+"suggestedTicketType": "service_request",
+"suggestedImpact": 2,
+"suggestedUrgency": 2
 }
 
 ---
@@ -187,15 +200,16 @@ export const analyzeTicketWithIncidentCheck = async (ticket, availableSkills = [
             apiKey: process.env.GEMINI_API_KEY,
         }),
         name: "AI Ticket Triage Assistant",
-        system: `You are an expert AI assistant that processes technical support tickets.
+        system: `You are an expert AI assistant that processes technical support tickets using ITIL best practices.
 
 Your job is to:
 1. Summarize the issue.
 2. Provide helpful notes and resource links for human moderators.
 3. List relevant technical skills required.
-4. Determine the appropriate priority level based on impact and urgency.
+4. Classify the ticket type.
+5. Assess impact and urgency levels.
 ${skillConstraint}
-${activeIncidents.length > 0 ? '5. Check if this ticket matches any known active incident.' : ''}
+${activeIncidents.length > 0 ? '6. Check if this ticket matches any known active incident.' : ''}
 
 IMPORTANT:
 - Respond with *only* valid raw JSON.
@@ -211,11 +225,21 @@ IMPORTANT:
 - summary: A short 1-2 sentence summary of the issue.
 - helpfulNotes: A detailed technical explanation that a moderator can use to solve this issue. Include useful external links or resources if possible.
 - relatedSkills: An array of relevant skills required to solve the issue.${availableSkills.length > 0 ? ` You MUST only choose from these skills: ${JSON.stringify(availableSkills)}. If none match, return an empty array [].` : ` (e.g., ["React", "MongoDB", "Payroll", "Hardware"])`}
-- suggestedPriority: One of "low", "medium", "high", or "critical" based on:
-  * low: Minor issues, cosmetic problems, feature requests with no urgency
-  * medium: Standard issues that affect productivity but have workarounds
-  * high: Significant issues affecting multiple users or business operations
-  * critical: System-wide outages, security issues, or complete blockers
+- suggestedTicketType: One of "service_request", "problem", "change_request", "access_request", "query", or "bug" based on:
+  * service_request: Standard request for a service (e.g., new equipment, software installation)
+  * problem: Root cause investigation for recurring issues
+  * change_request: Request to modify or update existing systems/configurations
+  * access_request: Permission, account access, or credential-related requests
+  * query: General inquiry, question, or information request
+  * bug: Software bug, defect, or error report
+- suggestedImpact: A number 1, 2, or 3 based on scope of effect:
+  * 1: Low - Affects only an individual user
+  * 2: Moderate - Affects a team or department
+  * 3: High - Affects the entire organization or critical business operations
+- suggestedUrgency: A number 1, 2, or 3 based on time sensitivity:
+  * 1: Low - Can wait, no immediate deadline
+  * 2: Moderate - Needs attention soon but not immediately
+  * 3: High - Needs immediate attention, time-critical
 - matchedIncidentId: ${activeIncidents.length > 0 ? 'The ID of the matching active incident, or null if no match.' : 'null (no active incidents to check)'}
 ${incidentContext}
 
@@ -224,7 +248,9 @@ Respond only in this JSON format:
   "summary": "Short summary of the ticket",
   "helpfulNotes": "Here are useful tips...",
   "relatedSkills": ["React", "Node.js"],
-  "suggestedPriority": "medium",
+  "suggestedTicketType": "service_request",
+  "suggestedImpact": 2,
+  "suggestedUrgency": 2,
   "matchedIncidentId": null
 }
 

@@ -329,6 +329,47 @@ function TicketDetailsPage() {
                 <p className="text-slate-400 text-[10px] uppercase font-bold tracking-widest mb-1">Department</p>
                 <p className="font-semibold text-slate-800 break-words">{ticket.department?.name || 'Uncategorized'}</p>
               </div>
+              
+              {/* Ticket Type */}
+              {ticket.ticketType && (
+                <div>
+                  <p className="text-slate-400 text-[10px] uppercase font-bold tracking-widest mb-1">Ticket Type</p>
+                  <p className="font-semibold text-slate-800 break-words capitalize">
+                    {ticket.ticketType.replace(/_/g, ' ')}
+                  </p>
+                </div>
+              )}
+              
+              {/* Impact & Urgency */}
+              {(ticket.impact || ticket.urgency) && (
+                <div className="flex gap-4">
+                  {ticket.impact && (
+                    <div className="flex-1">
+                      <p className="text-slate-400 text-[10px] uppercase font-bold tracking-widest mb-1">Impact</p>
+                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold ${
+                        ticket.impact === 3 ? 'bg-rose-100 text-rose-700 border border-rose-200' :
+                        ticket.impact === 2 ? 'bg-amber-100 text-amber-700 border border-amber-200' :
+                        'bg-slate-100 text-slate-600 border border-slate-200'
+                      }`}>
+                        {ticket.impact === 3 ? 'High' : ticket.impact === 2 ? 'Moderate' : 'Low'}
+                      </span>
+                    </div>
+                  )}
+                  {ticket.urgency && (
+                    <div className="flex-1">
+                      <p className="text-slate-400 text-[10px] uppercase font-bold tracking-widest mb-1">Urgency</p>
+                      <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold ${
+                        ticket.urgency === 3 ? 'bg-rose-100 text-rose-700 border border-rose-200' :
+                        ticket.urgency === 2 ? 'bg-amber-100 text-amber-700 border border-amber-200' :
+                        'bg-slate-100 text-slate-600 border border-slate-200'
+                      }`}>
+                        {ticket.urgency === 3 ? 'High' : ticket.urgency === 2 ? 'Moderate' : 'Low'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+              
               <div>
                 <p className="text-slate-400 text-[10px] uppercase font-bold tracking-widest mb-1">Assigned To</p>
                 <p className="font-semibold text-slate-800 break-words">{ticket.assignedTo?.email || <span className="text-rose-400 italic font-medium">Unassigned</span>}</p>
