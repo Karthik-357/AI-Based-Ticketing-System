@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Ticket, AlertTriangle, Users, LogOut, LayoutDashboard } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 function Sidebar({ user, onLogout }) {
   const navigate = useNavigate();
@@ -40,14 +41,22 @@ function Sidebar({ user, onLogout }) {
             <button
               key={item.label}
               onClick={() => navigate(item.path)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm text-left transition-none ${
+              className={`relative w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium text-sm text-left transition-colors duration-200 z-10 ${
                 isActive 
-                  ? 'bg-indigo-50 text-indigo-700 font-bold border border-indigo-100' 
-                  : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'
+                  ? 'text-indigo-700 font-bold' 
+                  : 'text-slate-500 hover:text-indigo-600 hover:bg-slate-50'
               }`}
             >
-              <Icon className="w-5 h-5" />
-              {item.label}
+              {isActive && (
+                <motion.div
+                  layoutId="sidebar-active"
+                  className="absolute inset-0 bg-indigo-50 border border-indigo-100 rounded-xl -z-10"
+                  initial={false}
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                />
+              )}
+              <Icon className="w-5 h-5 relative z-10" />
+              <span className="relative z-10">{item.label}</span>
             </button>
           );
         })}

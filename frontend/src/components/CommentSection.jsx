@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 
 const CommentSection = ({ ticketId, ticketStatus }) => {
     const isClosed = ticketStatus === "CLOSED";
@@ -57,11 +58,11 @@ const CommentSection = ({ ticketId, ticketStatus }) => {
                 setNewComment('');
                 fetchComments();
             } else {
-                alert("Failed to post comment");
+                toast.error("Failed to post comment");
             }
         } catch (err) {
             console.error("Error posting comment:", err);
-            alert("Error posting comment");
+            toast.error("Error posting comment");
         } finally {
             setSubmitting(false);
         }

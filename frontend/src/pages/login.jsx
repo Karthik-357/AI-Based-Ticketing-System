@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from "react-router-dom";
 import { ShieldCheck } from "lucide-react";
+import toast from 'react-hot-toast';
 
 function Login() {
 
@@ -34,10 +35,10 @@ function Login() {
         localStorage.setItem("userDepartment", data.user.department?._id || "")
         navigate("/")
       } else {
-        alert(data.error || "Login failed")
+        toast.error(data.error || "Login failed")
       }
     } catch (error) {
-      alert("Login - something went wrong")
+      toast.error("Login - something went wrong")
     }
     finally {
       setLoading(false)

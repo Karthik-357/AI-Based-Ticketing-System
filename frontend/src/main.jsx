@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { Toaster } from 'react-hot-toast'
 import CheckAuth from './components/check-auth.jsx'
 import Tickets from './pages/tickets.jsx'
 import TicketDetailsPage from './pages/ticket.jsx'
@@ -14,6 +15,7 @@ import IncidentDetailsPage from './pages/incident.jsx'
 createRoot(document.getElementById('root')).render(
    <StrictMode>
       <BrowserRouter>
+         <Toaster position="bottom-right" toastOptions={{ className: 'text-sm font-medium' }} />
          <Routes>
             <Route
                path="/login"

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from "react-router-dom";
 import { Ticket, PlusCircle, XCircle, Calendar, User, Tag, AlertCircle, Sparkles, Settings2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 
 function Tickets() {
   const [tickets, setTickets] = useState([])
@@ -104,7 +106,7 @@ function Tickets() {
         setTickets(Array.isArray(data) ? data : [])
       } else {
         console.error("Failed to fetch tickets:", data.message)
-        alert(data.message || "Failed to fetch tickets")
+        toast.error(data.message || "Failed to fetch tickets")
         setTickets([])
       }
     } catch (error) {
@@ -156,11 +158,12 @@ function Tickets() {
         setIsAdvancedMode(false)
         setEmployees([])
         fetchTickets()
+        toast.success("Ticket created successfully")
       } else {
-        alert(data.message || "Failed to create ticket")
+        toast.error(data.message || "Failed to create ticket")
       }
     } catch (error) {
-      alert("Error creating ticket")
+      toast.error("Error creating ticket")
     }
   }
 
@@ -190,7 +193,10 @@ function Tickets() {
   }
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-12 relative">
+      <div className="fixed -right-20 -bottom-20 pointer-events-none opacity-[0.03] z-0">
+         <Ticket className="w-[500px] h-[500px] text-indigo-900" />
+      </div>
       
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white shadow-sm p-6 sm:p-8 rounded-2xl border border-slate-100 relative overflow-hidden">
@@ -213,7 +219,7 @@ function Tickets() {
       </div>
 
       {/* Tabs */}
-      <div className="flex flex-wrap gap-2 p-1 bg-white border border-slate-200 rounded-xl shadow-sm w-fit">
+      <div className="flex flex-wrap gap-1 p-1 bg-white border border-slate-200 rounded-xl shadow-sm w-fit relative z-10">
         {[
           { id: 'raised', label: 'Tickets Raised' },
           { id: 'assigned', label: 'Tickets Assigned' },
@@ -225,12 +231,21 @@ function Tickets() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-5 py-2 rounded-lg font-medium text-sm transition-none ${activeTab === tab.id
-                ? "bg-indigo-600 text-white shadow-md"
-                : "text-slate-500 hover:text-indigo-600 hover:bg-slate-50"
-              }`}
+            className={`relative px-5 py-2 font-medium text-sm transition-colors duration-200 ${
+              activeTab === tab.id
+                ? "text-indigo-700"
+                : "text-slate-500 hover:text-indigo-600 hover:bg-slate-50 rounded-lg"
+            }`}
           >
-            {tab.label}
+            {activeTab === tab.id && (
+              <motion.div
+                layoutId="active-tab"
+                className="absolute inset-0 bg-indigo-50 border border-indigo-100 rounded-lg -z-10"
+                initial={false}
+                transition={{ type: "spring", stiffness: 500, damping: 35 }}
+              />
+            )}
+            <span className="relative z-10">{tab.label}</span>
           </button>
         ))}
       </div>
@@ -450,94 +465,122 @@ function Tickets() {
         </div>
       )}
 
-      <div className="flex flex-col gap-4">
-        {tickets.length === 0 ? (
-          <div className="glass-panel py-16 text-center border-dashed border-slate-200">
-            <AlertCircle className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-slate-700 mb-2">No Tickets Found</h3>
-            <p className="text-slate-500 font-medium max-w-sm mx-auto">
-              {activeTab === "raised"
-                ? "You haven't raised any tickets yet. Create your first ticket!"
-                : activeTab === "assigned"
-                  ? "No tickets assigned to you yet."
-                  : activeTab === "collaborating"
-                    ? "You're not collaborating on any tickets yet."
-                    : activeTab === "department"
-                      ? "No tickets found in your department."
-                      : activeTab === "collab_pending"
-                        ? "No pending collaboration requests to review."
-                        : activeTab === "all"
-                          ? "No tickets exist in the system yet."
-                          : "No tickets yet."}
-            </p>
-          </div>
-        ) : (
-          tickets.map((ticket) => (
-            <div
-              key={ticket._id}
-              className="glass-panel p-5 cursor-pointer group hover:bg-slate-50 border-l-4 border-l-transparent hover:border-l-indigo-500"
-              onClick={() => navigate(`/tickets/${ticket._id}`)}
+      <div className="flex flex-col gap-4 relative z-10">
+        <AnimatePresence mode="wait">
+          {tickets.length === 0 ? (
+            <motion.div 
+              key="empty"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="glass-panel py-20 text-center border-dashed border-slate-200 bg-white/50 backdrop-blur-sm shadow-sm"
             >
-              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                 
-                 <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-2">
-                       {ticket.ticketNumber && (
-                           <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-xs font-mono font-bold border border-slate-200">
-                               TKT-{String(ticket.ticketNumber).padStart(3, '0')}
-                           </span>
-                       )}
-                       <h3 className="text-lg font-bold text-slate-800 group-hover:text-indigo-600 truncate">
-                         {ticket.title}
-                       </h3>
-                    </div>
-                    <p className="text-slate-500 text-sm line-clamp-2 md:line-clamp-1 mb-4">
-                      {ticket.description}
-                    </p>
-                    
-                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-medium text-slate-400">
-                       <div className="flex items-center gap-1.5">
-                          <Calendar className="w-3.5 h-3.5" />
-                          {new Date(ticket.createdAt).toLocaleDateString()}
-                       </div>
-                       
-                       {activeTab !== "raised" && ticket.createdBy?.email && (
-                          <div className="flex items-center gap-1.5 text-slate-500 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
-                             <User className="w-3 h-3" />
-                             Raised by: <span className="text-slate-700">{ticket.createdBy.email.split('@')[0]}</span>
-                          </div>
-                       )}
-
-                       <div className="flex items-center gap-1.5" title="Assignee">
-                          <User className="w-3.5 h-3.5" />
-                          {ticket.assignedTo?.email ? (
-                             <span className="text-slate-600 font-semibold">{ticket.assignedTo.email.split('@')[0]}</span>
-                          ) : (
-                             <span className="text-rose-400 italic">Unassigned</span>
-                          )}
-                       </div>
-                    </div>
-                 </div>
-
-                 <div className="flex md:flex-col items-center md:items-end justify-between md:justify-start gap-3 shrink-0">
-                     <span className={getStatusBadge(ticket.status)}>
-                        {ticket.status.replace("_", " ")}
-                     </span>
-                     <div className="flex items-center gap-2">
-                        {ticket.department?.name && (
-                            <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-slate-500 bg-slate-50 px-2 py-1 rounded border border-slate-200">
-                                <Tag className="w-3 h-3" /> {ticket.department.name}
-                            </span>
-                        )}
-                        <span className={getPriorityBadge(ticket.priority)}>
-                           {ticket.priority || 'NONE'}
-                        </span>
-                     </div>
-                 </div>
+              <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner border border-slate-100">
+                 <Ticket className="w-10 h-10 text-slate-300" />
               </div>
-            </div>
-          ))
-        )}
+              <h3 className="text-xl font-bold text-slate-700 mb-2 tracking-tight">No Tickets Found</h3>
+              <p className="text-slate-500 font-medium max-w-sm mx-auto">
+                {activeTab === "raised"
+                  ? "You haven't raised any tickets yet. Create your first ticket!"
+                  : activeTab === "assigned"
+                    ? "No tickets assigned to you yet."
+                    : activeTab === "collaborating"
+                      ? "You're not collaborating on any tickets yet."
+                      : activeTab === "department"
+                        ? "No tickets found in your department."
+                        : activeTab === "collab_pending"
+                          ? "No pending collaboration requests to review."
+                          : activeTab === "all"
+                            ? "No tickets exist in the system yet."
+                            : "No tickets yet."}
+              </p>
+            </motion.div>
+          ) : (
+            tickets.map((ticket, idx) => {
+              const myDeptId = localStorage.getItem("userDepartment");
+              const hasPendingCollabForMe = (userRole === "manager" || userRole === "admin") && 
+                ticket.collaborationRequests?.some(req => 
+                  req.status === "pending" && 
+                  (userRole === "admin" || (req.user?.department?._id || req.user?.department) === myDeptId)
+                );
+
+              return (
+              <motion.div
+                key={ticket._id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2, delay: idx * 0.05 }}
+                className={`glass-panel p-5 cursor-pointer group hover:bg-slate-50 transition-all z-10 relative overflow-hidden ${hasPendingCollabForMe ? 'border-l-4 border-l-amber-500 bg-amber-50/20' : 'border-l-4 border-l-transparent hover:border-l-indigo-500'}`}
+                onClick={() => navigate(`/tickets/${ticket._id}`)}
+              >
+                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 relative z-10">
+                   
+                   <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-2 flex-wrap">
+                         {ticket.ticketNumber && (
+                             <span className="bg-slate-100 text-slate-600 px-2.5 py-1 rounded-md text-[11px] font-mono font-bold border border-slate-200">
+                                 TKT-{String(ticket.ticketNumber).padStart(3, '0')}
+                             </span>
+                         )}
+                         <h3 className={`text-[17px] font-bold transition-colors truncate ${hasPendingCollabForMe ? 'text-amber-900 group-hover:text-amber-700' : 'text-slate-800 group-hover:text-indigo-600'}`}>
+                           {ticket.title}
+                         </h3>
+                         {hasPendingCollabForMe && (
+                           <span className="bg-amber-100/80 text-amber-700 border border-amber-200/60 px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                             <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></div>
+                             Action Required
+                           </span>
+                         )}
+                      </div>
+                      <p className="text-slate-500 text-sm line-clamp-2 md:line-clamp-1 mb-4 leading-relaxed">
+                        {ticket.description}
+                      </p>
+                      
+                      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-medium text-slate-400">
+                         <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-1 rounded border border-slate-100">
+                            <Calendar className="w-3.5 h-3.5" />
+                            {new Date(ticket.createdAt).toLocaleDateString()}
+                         </div>
+                         
+                         {activeTab !== "raised" && ticket.createdBy?.email && (
+                            <div className="flex items-center gap-1.5 text-slate-500 bg-slate-50 px-2 py-1 rounded border border-slate-100">
+                               <User className="w-3 h-3" />
+                               Raised by: <span className="text-slate-700">{ticket.createdBy.email.split('@')[0]}</span>
+                            </div>
+                         )}
+
+                         <div className="flex items-center gap-1.5 px-2 py-1" title="Assignee">
+                            <User className="w-3.5 h-3.5" />
+                            {ticket.assignedTo?.email ? (
+                               <span className="text-slate-600 font-semibold">{ticket.assignedTo.email.split('@')[0]}</span>
+                            ) : (
+                               <span className="text-rose-400 italic font-medium">Unassigned</span>
+                            )}
+                         </div>
+                      </div>
+                   </div>
+
+                   <div className="flex md:flex-col items-center md:items-end justify-between md:justify-start gap-3 shrink-0">
+                       <span className={getStatusBadge(ticket.status)}>
+                          {ticket.status.replace("_", " ")}
+                       </span>
+                       <div className="flex items-center gap-2">
+                          {ticket.department?.name && (
+                              <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-slate-500 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-200 shadow-sm">
+                                  <Tag className="w-3 h-3" /> {ticket.department.name}
+                              </span>
+                          )}
+                          <span className={getPriorityBadge(ticket.priority)}>
+                             {ticket.priority || 'NONE'}
+                          </span>
+                       </div>
+                   </div>
+                </div>
+              </motion.div>
+              );
+            })
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useParams } from "react-router-dom"
+import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
+import { AlertTriangle } from 'lucide-react';
 
 function IncidentDetailsPage() {
     const { id } = useParams()
@@ -43,7 +46,6 @@ function IncidentDetailsPage() {
         }
 
         setUpdating(true)
-        setUpdateMsg(null)
         try {
             const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/incidents/${id}/status`, {
                 method: "PATCH",
@@ -56,12 +58,12 @@ function IncidentDetailsPage() {
             const data = await res.json()
             if (res.ok) {
                 setIncident(data.incident)
-                setUpdateMsg({ type: "success", text: data.message })
+                toast.success(data.message)
             } else {
-                setUpdateMsg({ type: "error", text: data.error || "Failed to update status" })
+                toast.error(data.error || "Failed to update status")
             }
         } catch (error) {
-            setUpdateMsg({ type: "error", text: "Something went wrong" })
+            toast.error("Something went wrong")
         } finally {
             setUpdating(false)
         }
@@ -69,7 +71,6 @@ function IncidentDetailsPage() {
 
     const handlePriorityUpdate = async (newPriority) => {
         setUpdating(true)
-        setUpdateMsg(null)
         try {
             const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/incidents/${id}/priority`, {
                 method: "PATCH",
@@ -82,12 +83,12 @@ function IncidentDetailsPage() {
             const data = await res.json()
             if (res.ok) {
                 setIncident(data.incident)
-                setUpdateMsg({ type: "success", text: data.message })
+                toast.success(data.message)
             } else {
-                setUpdateMsg({ type: "error", text: data.error || "Failed to update priority" })
+                toast.error(data.error || "Failed to update priority")
             }
         } catch (error) {
-            setUpdateMsg({ type: "error", text: "Something went wrong" })
+            toast.error("Something went wrong")
         } finally {
             setUpdating(false)
         }
@@ -98,7 +99,6 @@ function IncidentDetailsPage() {
         if (!newUpdate.trim()) return
 
         setUpdating(true)
-        setUpdateMsg(null)
         try {
             const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/incidents/${id}/updates`, {
                 method: "POST",
@@ -112,12 +112,12 @@ function IncidentDetailsPage() {
             if (res.ok) {
                 setIncident(data.incident)
                 setNewUpdate('')
-                setUpdateMsg({ type: "success", text: "Update added successfully" })
+                toast.success("Update added successfully")
             } else {
-                setUpdateMsg({ type: "error", text: data.error || "Failed to add update" })
+                toast.error(data.error || "Failed to add update")
             }
         } catch (error) {
-            setUpdateMsg({ type: "error", text: "Something went wrong" })
+            toast.error("Something went wrong")
         } finally {
             setUpdating(false)
         }
@@ -140,7 +140,6 @@ function IncidentDetailsPage() {
 
     const handleAddTicket = async (ticketId) => {
         setUpdating(true)
-        setUpdateMsg(null)
         try {
             const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/incidents/${id}/tickets`, {
                 method: "POST",
@@ -154,12 +153,12 @@ function IncidentDetailsPage() {
             if (res.ok) {
                 setIncident(data.incident)
                 setAvailableTickets(prev => prev.filter(t => t._id !== ticketId))
-                setUpdateMsg({ type: "success", text: data.message })
+                toast.success(data.message)
             } else {
-                setUpdateMsg({ type: "error", text: data.error || "Failed to add ticket" })
+                toast.error(data.error || "Failed to add ticket")
             }
         } catch (error) {
-            setUpdateMsg({ type: "error", text: "Something went wrong" })
+            toast.error("Something went wrong")
         } finally {
             setUpdating(false)
         }
@@ -170,7 +169,6 @@ function IncidentDetailsPage() {
         if (!confirmed) return
 
         setUpdating(true)
-        setUpdateMsg(null)
         try {
             const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/incidents/${id}/tickets/${ticketId}`, {
                 method: "DELETE",
@@ -179,12 +177,12 @@ function IncidentDetailsPage() {
             const data = await res.json()
             if (res.ok) {
                 setIncident(data.incident)
-                setUpdateMsg({ type: "success", text: data.message })
+                toast.success(data.message)
             } else {
-                setUpdateMsg({ type: "error", text: data.error || "Failed to remove ticket" })
+                toast.error(data.error || "Failed to remove ticket")
             }
         } catch (error) {
-            setUpdateMsg({ type: "error", text: "Something went wrong" })
+            toast.error("Something went wrong")
         } finally {
             setUpdating(false)
         }
@@ -269,13 +267,14 @@ function IncidentDetailsPage() {
     const nextStatuses = statusFlow[incident.status] || []
 
     return (
-        <div className="p-4 sm:p-6 lg:max-w-[1600px] w-full mx-auto space-y-6 pb-12">
-            <button
-                onClick={() => navigate('/incidents')}
-                className="glass-button-secondary mb-2 w-fit px-4 py-2 text-sm"
-            >
-                &larr; Back to Incidents
-            </button>
+        <div className="p-4 sm:p-6 lg:max-w-[1600px] w-full mx-auto space-y-6 pb-12 relative overflow-hidden">
+            <div className="fixed -right-20 -top-20 pointer-events-none opacity-[0.03] z-0">
+               <AlertTriangle className="w-[800px] h-[800px] text-rose-900" />
+            </div>
+            <div className="relative z-10">
+                <button onClick={() => navigate("/incidents")} className="glass-button-secondary mb-2 w-fit px-4 py-2 text-sm">
+                    ← Back to Incidents
+                </button>
 
             {/* Incident Header (Full width) */}
             <div className="glass-panel p-6 sm:p-8 relative overflow-hidden">
@@ -420,23 +419,8 @@ function IncidentDetailsPage() {
                 </div>
 
                 {/* RIGHT COLUMN: Metadata and Context */}
-                <div className="lg:col-span-1 space-y-6 sticky top-6">
+                <div className="lg:col-span-1 space-y-6 sticky top-6 z-10">
                     
-                    {/* Description */}
-                    <div className="glass-panel p-6">
-                        <h3 className="text-[13px] font-bold text-slate-800 mb-4 uppercase tracking-wider border-b border-slate-100 pb-3">Description</h3>
-                        <div className="text-slate-700 font-medium leading-relaxed whitespace-pre-wrap text-[14px]">
-                            {incident.description}
-                        </div>
-                    </div>
-
-                    {/* Status Update Message */}
-                    {updateMsg && (
-                        <div className={`p-4 rounded-xl text-sm font-bold border shadow-sm ${updateMsg.type === 'success' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-rose-50 text-rose-800 border-rose-200'}`}>
-                            {updateMsg.text}
-                        </div>
-                    )}
-
                     {/* Properties & Actions */}
                     <div className="glass-panel p-6">
                         <h3 className="text-sm font-bold text-slate-800 mb-4 uppercase tracking-wider border-b border-slate-100 pb-3">Properties</h3>
@@ -503,63 +487,71 @@ function IncidentDetailsPage() {
                         )}
                     </div>
 
+                    {/* Description */}
+                    <div className="glass-panel p-6">
+                        <h3 className="text-[13px] font-bold text-slate-800 mb-4 uppercase tracking-wider border-b border-slate-100 pb-3">Description</h3>
+                        <div className="text-slate-700 font-medium leading-relaxed whitespace-pre-wrap text-[14px]">
+                            {incident.description}
+                        </div>
+                    </div>
 
                 </div>
             </div>
 
             {/* Add Ticket Modal */}
-            {showAddTicket && (
-                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden border border-slate-100 flex flex-col">
-                        <div className="flex justify-between items-center p-6 border-b border-slate-100">
-                            <h3 className="text-xl font-bold text-slate-800">Add Ticket to Incident</h3>
-                            <button
-                                onClick={() => setShowAddTicket(false)}
-                                className="text-slate-400 hover:text-slate-600 text-2xl font-light"
-                            >
-                                &times;
-                            </button>
-                        </div>
-                        <div className="p-6 overflow-y-auto flex-1 bg-slate-50/50">
-                            {loadingTickets ? (
-                                <p className="text-slate-500 font-medium text-center py-8">Loading available tickets...</p>
-                            ) : availableTickets.length === 0 ? (
-                                <p className="text-slate-500 font-medium text-center py-8">No available tickets to add.</p>
-                            ) : (
-                                <div className="space-y-3">
-                                    {availableTickets.map((ticket) => (
-                                        <div
-                                            key={ticket._id}
-                                            className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col sm:flex-row justify-between sm:items-center gap-4 hover:border-indigo-300 hover:shadow-sm transition-all"
-                                        >
-                                            <div>
-                                                <div className="flex items-center gap-3">
-                                                    <span className="text-sm font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
+            <AnimatePresence>
+                {showAddTicket && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowAddTicket(false)} className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" />
+                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden border border-slate-100 flex flex-col">
+                            <div className="flex justify-between items-center p-6 border-b border-slate-100 bg-white">
+                                <h3 className="text-xl font-bold text-slate-800">Add Ticket to Incident</h3>
+                                <button
+                                    onClick={() => setShowAddTicket(false)}
+                                    className="text-slate-400 hover:text-slate-600 text-2xl font-light"
+                                >
+                                    &times;
+                                </button>
+                            </div>
+                            <div className="p-6 overflow-y-auto flex-1 bg-slate-50/50">
+                                {loadingTickets ? (
+                                    <p className="text-slate-500 font-medium text-center py-8">Loading available tickets...</p>
+                                ) : availableTickets.length === 0 ? (
+                                    <p className="text-slate-500 font-medium text-center py-8">No available tickets to add.</p>
+                                ) : (
+                                    <div className="space-y-3">
+                                        {availableTickets.map((ticket) => (
+                                            <div
+                                                key={ticket._id}
+                                                className="bg-white border border-slate-200 rounded-xl p-4 flex justify-between items-center shadow-sm"
+                                            >
+                                                <div>
+                                                    <span className="text-slate-500 text-[10px] font-bold font-mono bg-slate-100 px-2 py-0.5 rounded mr-2">
                                                         TKT-{String(ticket.ticketNumber).padStart(3, '0')}
                                                     </span>
-                                                    <span className="font-bold text-slate-800">{ticket.title}</span>
+                                                    <span className="font-bold text-slate-700 text-sm">{ticket.title}</span>
+                                                    <p className="text-xs text-slate-500 mt-1 line-clamp-1">{ticket.description}</p>
                                                 </div>
-                                                <div className="flex gap-2 text-[11px] font-bold uppercase tracking-wider text-slate-400 mt-2">
-                                                    <span className="bg-slate-100 px-2 py-0.5 rounded">{ticket.department?.name}</span>
-                                                    <span className="px-2 py-0.5">{ticket.createdBy?.email}</span>
-                                                </div>
+                                                <button
+                                                    onClick={() => handleAddTicket(ticket._id)}
+                                                    className="glass-button-primary px-4 py-1.5 text-[11px] whitespace-nowrap"
+                                                >
+                                                    Add
+                                                </button>
                                             </div>
-                                            <button
-                                                onClick={() => handleAddTicket(ticket._id)}
-                                                disabled={updating}
-                                                className="glass-button-secondary text-indigo-600 border-indigo-200 hover:bg-indigo-50 py-1.5 px-6 whitespace-nowrap"
-                                            >
-                                                Add to Incident
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="p-4 border-t border-slate-100 bg-white flex justify-end">
+                                <button onClick={() => setShowAddTicket(false)} className="glass-button-secondary">Close</button>
+                            </div>
+                        </motion.div>
                     </div>
-                </div>
-            )}
+                )}
+            </AnimatePresence>
         </div>
+      </div>
     )
 }
 
