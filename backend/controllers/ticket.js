@@ -1,3 +1,4 @@
+import mongoose from "mongoose"
 import { inngest } from "../inngest/client.js"
 import Ticket from "../models/ticket.js"
 import User from "../models/user.js"
@@ -555,7 +556,7 @@ export const requestCollaboration = async (req, res) => {
         }
 
         const newRequests = uniqueCollaboratorIds.map(userId => ({
-            user: userId,
+            user: new mongoose.Types.ObjectId(userId),
             requestedBy: user._id,
             requestedAt: new Date(),
             reason: reason.trim(),
