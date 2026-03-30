@@ -6,6 +6,14 @@ import TicketActivity from "../models/ticketActivity.js";
 import IncidentActivity from "../models/incidentActivity.js";
 import { sendMail } from "../utils/mailer.js";
 
+// Helper to get string ID from various formats
+const getIdString = (value) => {
+    if (!value) return null;
+    if (typeof value === "string") return value;
+    if (value._id) return value._id.toString();
+    return value.toString();
+};
+
 // Helper to check if user can manage incident
 const canManageIncident = (user, incident) => {
     return user.role === 'admin' || incident.incidentLead?._id?.toString() === user._id.toString();
@@ -18,6 +26,37 @@ const isAssignedToIncidentTicket = async (userId, ticketIds) => {
         assignedTo: userId
     });
     return !!assignedTicket;
+};
+
+// Filter incident tickets based on user role and access
+const filterTicketsForUser = (tickets, user, incidentDepartmentId) => {
+    if (!tickets || tickets.length === 0) return [];
+    
+    const userId = getIdString(user._id);
+    const userDeptId = getIdString(user.department);
+    const incidentDeptId = getIdString(incidentDepartmentId);
+    
+    // Admin and incident department manager see all tickets
+    if (user.role === 'admin') {
+        return tickets;
+    }
+    
+    // Manager of the incident's department sees all tickets
+    if (user.role === 'manager' && userDeptId === incidentDeptId) {
+        return tickets;
+    }
+    
+    // Employees and managers of the incident's assigned department see all tickets
+    if (userDeptId === incidentDeptId) {
+        return tickets;
+    }
+    
+    // Other users (raisers from different departments) only see their own tickets
+    return tickets.filter(ticket => {
+        const createdById = getIdString(ticket.createdBy?._id || ticket.createdBy);
+        const assignedToId = getIdString(ticket.assignedTo?._id || ticket.assignedTo);
+        return createdById === userId || assignedToId === userId;
+    });
 };
 
 export const getIncidents = async (req, res) => {
@@ -46,8 +85,8 @@ export const getIncident = async (req, res) => {
             .populate({
                 path: 'tickets',
                 populate: [
-                    { path: 'createdBy', select: 'email' },
-                    { path: 'assignedTo', select: 'email' },
+                    { path: 'createdBy', select: 'email _id' },
+                    { path: 'assignedTo', select: 'email _id' },
                     { path: 'department', select: 'name' },
                 ],
             });
@@ -56,7 +95,23 @@ export const getIncident = async (req, res) => {
             return res.status(404).json({ error: "Incident not found" });
         }
 
-        res.json({ incident });
+        // Filter tickets based on user role and department
+        const filteredTickets = filterTicketsForUser(
+            incident.tickets, 
+            req.user, 
+            incident.department
+        );
+        
+        // Return incident with filtered tickets and total count for context
+        const response = {
+            incident: {
+                ...incident.toObject(),
+                tickets: filteredTickets,
+                totalTicketCount: incident.tickets.length
+            }
+        };
+
+        res.json(response);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

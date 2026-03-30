@@ -39,8 +39,9 @@ function IncidentDetailsPage() {
 
     const handleStatusUpdate = async (newStatus) => {
         if (newStatus === "resolved") {
+            const ticketCount = incident.totalTicketCount || incident.tickets?.length || 0
             const confirmed = window.confirm(
-                `Are you sure you want to resolve this incident? This will:\n\n• Mark all ${incident.tickets?.length || 0} linked tickets as DONE\n• Add a system comment to each ticket\n• Notify all ticket raisers via email`
+                `Are you sure you want to resolve this incident? This will:\n\n• Mark all ${ticketCount} linked tickets as DONE\n• Add a system comment to each ticket\n• Notify all ticket raisers via email`
             )
             if (!confirmed) return
         }
@@ -304,7 +305,9 @@ function IncidentDetailsPage() {
                     <div className="glass-panel p-6 sm:p-8">
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b border-slate-100 pb-5">
                             <h3 className="text-[14px] font-bold text-slate-800 uppercase tracking-wider flex items-center gap-3">
-                                LINKED TICKETS <span className="bg-slate-100 text-slate-500 px-3 py-1 rounded-md text-[12px] font-bold shadow-sm border border-slate-200/60">{incident.tickets?.length || 0}</span>
+                                LINKED TICKETS <span className="bg-slate-100 text-slate-500 px-3 py-1 rounded-md text-[12px] font-bold shadow-sm border border-slate-200/60">
+                                    {incident.tickets?.length || 0}{incident.totalTicketCount && incident.totalTicketCount !== incident.tickets?.length ? ` of ${incident.totalTicketCount}` : ''}
+                                </span>
                             </h3>
                             {canManage && incident.status !== "resolved" && (
                                 <button
@@ -317,7 +320,11 @@ function IncidentDetailsPage() {
                         </div>
 
                         {!incident.tickets || incident.tickets.length === 0 ? (
-                            <p className="text-slate-400 text-sm font-medium italic p-6 bg-slate-50/50 rounded-xl text-center border border-dashed border-slate-200">No tickets actively linked to this incident.</p>
+                            <p className="text-slate-400 text-sm font-medium italic p-6 bg-slate-50/50 rounded-xl text-center border border-dashed border-slate-200">
+                                {incident.totalTicketCount && incident.totalTicketCount > 0 
+                                    ? "You can only view tickets you raised or tickets assigned to your department." 
+                                    : "No tickets actively linked to this incident."}
+                            </p>
                         ) : (
                             <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
                                 {incident.tickets.map((ticket) => (
@@ -355,7 +362,7 @@ function IncidentDetailsPage() {
                                             <span className="truncate text-slate-700">{ticket.assignedTo?.email || 'Unassigned'}</span>
                                         </div>
                                         
-                                        {canManage && incident.status !== "resolved" && incident.tickets.length > 1 && (
+                                        {canManage && incident.status !== "resolved" && (incident.totalTicketCount || incident.tickets.length) > 1 && (
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation()
