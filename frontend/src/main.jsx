@@ -9,6 +9,7 @@ import Tickets from './pages/tickets.jsx'
 import TicketDetailsPage from './pages/ticket.jsx'
 import Login from './pages/login.jsx'
 import Admin from './pages/admin.jsx'
+import Dashboard from './pages/dashboard.jsx'
 import Incidents from './pages/incidents.jsx'
 import IncidentDetailsPage from './pages/incident.jsx'
 
@@ -33,6 +34,14 @@ createRoot(document.getElementById('root')).render(
                   element={
                      <CheckAuth protected={true}>
                         <Tickets />
+                     </CheckAuth>
+                  }
+               />
+               <Route
+                  path="/dashboard"
+                  element={
+                     <CheckAuth protected={true} requiredRole={["admin", "manager"]}>
+                        <Dashboard />
                      </CheckAuth>
                   }
                />

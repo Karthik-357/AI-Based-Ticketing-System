@@ -14,7 +14,9 @@ useEffect(() => {
     if(protectedRoute){
         if(!token){
             navigate("/login")
-        } else if(requiredRole && userRole !== requiredRole){
+        } else if(requiredRole && (
+            Array.isArray(requiredRole) ? !requiredRole.includes(userRole) : userRole !== requiredRole
+        )){
             navigate("/")
         } else {
             setLoading(false)

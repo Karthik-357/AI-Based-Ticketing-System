@@ -187,7 +187,8 @@ function Tickets() {
     switch(status) {
       case 'TODO': return 'bg-slate-100 text-slate-600 border border-slate-200 px-3 py-1 rounded-full text-xs font-bold tracking-widest';
       case 'IN_PROGRESS': return 'bg-indigo-50 text-indigo-600 border border-indigo-200 px-3 py-1 rounded-full text-xs font-bold tracking-widest';
-      case 'RESOLVED': return 'bg-emerald-50 text-emerald-600 border border-emerald-200 px-3 py-1 rounded-full text-xs font-bold tracking-widest';
+      case 'DONE': return 'bg-emerald-50 text-emerald-600 border border-emerald-200 px-3 py-1 rounded-full text-xs font-bold tracking-widest';
+      case 'CLOSED': return 'bg-purple-50 text-purple-600 border border-purple-200 px-3 py-1 rounded-full text-xs font-bold tracking-widest';
       default: return 'bg-slate-100 text-slate-600 border border-slate-200 px-3 py-1 rounded-full text-xs font-bold tracking-widest';
     }
   }

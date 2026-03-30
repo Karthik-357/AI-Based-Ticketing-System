@@ -8,6 +8,7 @@ import commentRoutes from "./routes/comment.js"
 import departmentRoutes from "./routes/department.js"
 import skillRoutes from "./routes/skill.js"
 import incidentRoutes from "./routes/incident.js"
+import dashboardRoutes from "./routes/dashboard.js"
 import { inngest } from "./inngest/client.js"
 import { onTicketCreated } from "./inngest/functions/on-ticket-create.js";
 import { incidentDetection } from "./inngest/functions/incident-detection.js";
@@ -28,6 +29,7 @@ app.use("/api/comments", commentRoutes);
 app.use("/api/departments", departmentRoutes);
 app.use("/api/skills", skillRoutes);
 app.use("/api/incidents", incidentRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 app.use("/api/inngest", serve({
     client: inngest,

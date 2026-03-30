@@ -1,17 +1,24 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Ticket, AlertTriangle, Users, LogOut, LayoutDashboard } from 'lucide-react';
+import { Ticket, AlertTriangle, Users, LogOut, LayoutDashboard, BarChart3 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 function Sidebar({ user, onLogout }) {
   const navigate = useNavigate();
   const location = useLocation();
   const isAdmin = user?.role === 'admin';
+  const isManager = user?.role === 'manager';
 
-  const navItems = [
-    { label: 'Tickets', path: '/', icon: Ticket, activeCondition: (path) => path === '/' || path.startsWith('/ticket/') },
+  const navItems = [];
+
+  if (isAdmin || isManager) {
+    navItems.push({ label: 'Dashboard', path: '/dashboard', icon: BarChart3, activeCondition: (path) => path === '/dashboard' });
+  }
+
+  navItems.push(
+    { label: 'Tickets', path: '/', icon: Ticket, activeCondition: (path) => path === '/' || path.startsWith('/tickets/') },
     { label: 'Incidents', path: '/incidents', icon: AlertTriangle, activeCondition: (path) => path.startsWith('/incidents') || path.startsWith('/incident/') },
-  ];
+  );
 
   if (isAdmin) {
     navItems.push({ label: 'User Management', path: '/admin', icon: Users, activeCondition: (path) => path === '/admin' });

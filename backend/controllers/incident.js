@@ -8,7 +8,7 @@ import { sendMail } from "../utils/mailer.js";
 
 // Helper to check if user can manage incident
 const canManageIncident = (user, incident) => {
-    return user.role === 'admin' || user._id.toString() === incident.incidentLead._id.toString();
+    return user.role === 'admin' || incident.incidentLead?._id?.toString() === user._id.toString();
 };
 
 // Helper to check if user is assigned to any ticket in the incident

@@ -3,6 +3,8 @@ import jwt from "jsonwebtoken"
 import User from "../models/user.js"
 import Department from "../models/department.js"
 import Skill from "../models/skill.js"
+import Ticket from "../models/ticket.js"
+import Incident from "../models/incident.js"
 
 // Department can come as id or name from admin forms.
 const resolveDepartment = async (deptInput) => {
@@ -212,6 +214,29 @@ export const deleteUser = async (req, res) => {
         if (user._id.toString() === req.user._id.toString()) {
             return res.status(400).json({ error: "You cannot delete your own account" });
         }
+
+        // Clean up all references to this user before deletion
+
+        // 1. Unassign from tickets where they are the assignee
+        await Ticket.updateMany({ assignedTo: userId }, { assignedTo: null });
+
+        // 2. Remove from collaborators arrays
+        await Ticket.updateMany(
+            { collaborators: userId },
+            { $pull: { collaborators: userId } }
+        );
+
+        // 3. Remove their pending collaboration requests
+        await Ticket.updateMany(
+            { "collaborationRequests.user": userId },
+            { $pull: { collaborationRequests: { user: userId } } }
+        );
+
+        // 4. Clear managerId on any department they manage
+        await Department.updateMany({ managerId: userId }, { managerId: null });
+
+        // 5. Clear incidentLead on any incidents they lead
+        await Incident.updateMany({ incidentLead: userId }, { incidentLead: null });
 
         await User.findByIdAndDelete(userId);
         return res.json({ message: "User deleted successfully" });
