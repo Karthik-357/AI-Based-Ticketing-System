@@ -8,6 +8,7 @@ import CheckAuth from './components/check-auth.jsx'
 import Tickets from './pages/tickets.jsx'
 import TicketDetailsPage from './pages/ticket.jsx'
 import Login from './pages/login.jsx'
+import ForgotPassword from './pages/forgot-password.jsx'
 import Admin from './pages/admin.jsx'
 import Dashboard from './pages/dashboard.jsx'
 import Incidents from './pages/incidents.jsx'
@@ -23,6 +24,14 @@ createRoot(document.getElementById('root')).render(
                element={
                   <CheckAuth protected={false}>
                      <Login />
+                  </CheckAuth>
+               }
+            />
+            <Route
+               path="/forgot-password"
+               element={
+                  <CheckAuth protected={false}>
+                     <ForgotPassword />
                   </CheckAuth>
                }
             />

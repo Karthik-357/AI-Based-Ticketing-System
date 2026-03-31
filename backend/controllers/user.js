@@ -1,10 +1,12 @@
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
+import crypto from "crypto"
 import User from "../models/user.js"
 import Department from "../models/department.js"
 import Skill from "../models/skill.js"
 import Ticket from "../models/ticket.js"
 import Incident from "../models/incident.js"
+import { sendOTPEmail } from "../utils/mailer.js"
 
 // Department can come as id or name from admin forms.
 const resolveDepartment = async (deptInput) => {
@@ -315,6 +317,135 @@ export const getEmployeesByDepartment = async (req, res) => {
     } catch (error) {
         res.status(500).json({
             error: "Failed to fetch employees",
+            details: error.message
+        });
+    }
+};
+
+export const forgotPassword = async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        const user = await User.findOne({ email });
+        
+        if (!user) {
+            // Don't reveal if email exists for security
+            return res.json({ 
+                message: "If an account with that email exists, an OTP has been sent.",
+                success: true
+            });
+        }
+
+        // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Hash OTP before storing (for security)
+        const hashedOTP = crypto.createHash('sha256').update(otp).digest('hex');
+        
+        // Set OTP and expiry (10 minutes)
+        user.resetPasswordToken = hashedOTP;
+        user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+        await user.save();
+
+        // Send OTP email
+        await sendOTPEmail(user.email, otp);
+
+        res.json({ 
+            message: "If an account with that email exists, an OTP has been sent.",
+            success: true
+        });
+
+    } catch (error) {
+        console.error("Forgot password error:", error);
+        res.status(500).json({
+            error: "Failed to send OTP",
+            details: error.message
+        });
+    }
+};
+
+export const verifyOTP = async (req, res) => {
+    const { email, otp } = req.body;
+
+    try {
+        if (!otp || otp.length !== 6) {
+            return res.status(400).json({ error: "Invalid OTP format" });
+        }
+
+        // Hash the OTP to compare with stored hash
+        const hashedOTP = crypto.createHash('sha256').update(otp).digest('hex');
+
+        // Find user with valid OTP that hasn't expired
+        const user = await User.findOne({
+            email,
+            resetPasswordToken: hashedOTP,
+            resetPasswordExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ error: "Invalid or expired OTP" });
+        }
+
+        // Generate a temporary token for password reset step
+        const resetToken = crypto.randomBytes(32).toString('hex');
+        const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+        
+        // Update with new token, extend expiry for password reset
+        user.resetPasswordToken = hashedToken;
+        user.resetPasswordExpires = Date.now() + 15 * 60 * 1000; // 15 minutes to set new password
+        await user.save();
+
+        res.json({ 
+            message: "OTP verified successfully",
+            resetToken // Send this to frontend for the password reset step
+        });
+
+    } catch (error) {
+        console.error("Verify OTP error:", error);
+        res.status(500).json({
+            error: "Failed to verify OTP",
+            details: error.message
+        });
+    }
+};
+
+export const resetPassword = async (req, res) => {
+    const { resetToken, password } = req.body;
+
+    try {
+        if (!password || password.length < 6) {
+            return res.status(400).json({ 
+                error: "Password must be at least 6 characters long" 
+            });
+        }
+
+        // Hash the token to compare with stored hash
+        const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+        // Find user with valid token that hasn't expired
+        const user = await User.findOne({
+            resetPasswordToken: hashedToken,
+            resetPasswordExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ 
+                error: "Invalid or expired session. Please start over." 
+            });
+        }
+
+        // Hash new password and save
+        user.password = await bcrypt.hash(password, 10);
+        user.resetPasswordToken = null;
+        user.resetPasswordExpires = null;
+        await user.save();
+
+        res.json({ message: "Password has been reset successfully" });
+
+    } catch (error) {
+        console.error("Reset password error:", error);
+        res.status(500).json({
+            error: "Failed to reset password",
             details: error.message
         });
     }

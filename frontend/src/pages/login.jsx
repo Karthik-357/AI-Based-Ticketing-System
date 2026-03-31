@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { ShieldCheck } from "lucide-react";
 import toast from 'react-hot-toast';
 
@@ -72,7 +72,15 @@ function Login() {
             />
           </div>
           <div>
-            <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2 ml-1">Password</label>
+            <div className="flex justify-between items-center mb-2">
+              <label className="block text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Password</label>
+              <Link 
+                to="/forgot-password" 
+                className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+              >
+                Forgot password?
+              </Link>
+            </div>
             <input
               type="password"
               name="password"

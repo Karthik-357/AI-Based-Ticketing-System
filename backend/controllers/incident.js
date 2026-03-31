@@ -4,7 +4,6 @@ import User from "../models/user.js";
 import Comment from "../models/comment.js";
 import TicketActivity from "../models/ticketActivity.js";
 import IncidentActivity from "../models/incidentActivity.js";
-import { sendMail } from "../utils/mailer.js";
 
 // Helper to get string ID from various formats
 const getIdString = (value) => {
@@ -192,33 +191,6 @@ export const updateIncidentStatus = async (req, res) => {
                 newValue: 'resolved',
             });
 
-            // Email all unique ticket raisers
-            const uniqueRaisers = [...new Set(
-                tickets.map(t => t.createdBy?.email).filter(Boolean)
-            )];
-
-            for (const raiserEmail of uniqueRaisers) {
-                try {
-                    await sendMail(
-                        raiserEmail,
-                        `Incident ${incNumber} Resolved`,
-                        `The incident ${incNumber} ("${incident.title}") has been resolved.\n\nYour ticket that was part of this incident has been marked as DONE.\n\nIf you still experience issues, please create a new ticket.`
-                    );
-                } catch (emailErr) {
-                    console.error(`Failed to email raiser ${raiserEmail}:`, emailErr.message);
-                }
-            }
-
-            // Email the incident lead
-            try {
-                await sendMail(
-                    incident.incidentLead.email,
-                    `Incident ${incNumber} Resolved`,
-                    `Incident ${incNumber} ("${incident.title}") has been resolved.\n\n${tickets.length} tickets were bulk-updated to DONE.`
-                );
-            } catch (emailErr) {
-                console.error("Failed to email incident lead:", emailErr.message);
-            }
         } else {
             // Non-resolve status update
             incident.status = status;
@@ -233,18 +205,6 @@ export const updateIncidentStatus = async (req, res) => {
                 newValue: status,
             });
 
-            const incNumber = `INC-${String(incident.incidentNumber).padStart(3, '0')}`;
-
-            // Send status update email to incident lead
-            try {
-                await sendMail(
-                    incident.incidentLead.email,
-                    `Incident ${incNumber} Status Update: ${status}`,
-                    `Incident ${incNumber} ("${incident.title}") status changed from "${oldStatus}" to "${status}".`
-                );
-            } catch (emailErr) {
-                console.error("Failed to email incident lead:", emailErr.message);
-            }
         }
 
         const updatedIncident = await Incident.findById(req.params.id)
@@ -450,19 +410,6 @@ export const addTicketToIncident = async (req, res) => {
             metadata: { ticketId: ticket._id },
         });
 
-        // Notify ticket raiser
-        if (ticket.createdBy?.email) {
-            try {
-                await sendMail(
-                    ticket.createdBy.email,
-                    `Your ticket is now part of Incident ${incNumber}`,
-                    `Your ticket ${ticketNumber} has been linked to incident ${incNumber} ("${incident.title}").\n\nOur team is actively investigating. You will be notified when it is resolved.`
-                );
-            } catch (emailErr) {
-                console.error("Failed to email ticket raiser:", emailErr.message);
-            }
-        }
-
         const updatedIncident = await Incident.findById(req.params.id)
             .populate('department', 'name')
             .populate('incidentLead', 'email role')
@@ -547,19 +494,6 @@ export const removeTicketFromIncident = async (req, res) => {
             oldValue: ticketNumber,
             metadata: { ticketId: ticket._id },
         });
-
-        // Notify ticket raiser
-        if (ticket.createdBy?.email) {
-            try {
-                await sendMail(
-                    ticket.createdBy.email,
-                    `Your ticket has been removed from Incident ${incNumber}`,
-                    `Your ticket ${ticketNumber} has been unlinked from incident ${incNumber}.\n\nYour ticket will continue to be handled separately.`
-                );
-            } catch (emailErr) {
-                console.error("Failed to email ticket raiser:", emailErr.message);
-            }
-        }
 
         const updatedIncident = await Incident.findById(req.params.id)
             .populate('department', 'name')

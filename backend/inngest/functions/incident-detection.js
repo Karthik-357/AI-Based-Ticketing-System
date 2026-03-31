@@ -6,7 +6,6 @@ import Department from "../../models/department.js";
 import TicketActivity from "../../models/ticketActivity.js";
 import { getNextSequence } from "../../models/counter.js";
 import { clusterTickets } from "../../utils/ai.js";
-import { sendMail } from "../../utils/mailer.js";
 
 export const incidentDetection = inngest.createFunction(
     {
@@ -145,31 +144,6 @@ export const incidentDetection = inngest.createFunction(
                         newValue: `INC-${String(incidentNumber).padStart(3, '0')}`,
                     }));
                     await TicketActivity.insertMany(activityDocs);
-
-                    // Send email to the incident lead
-                    try {
-                        await sendMail(
-                            incidentLead.email,
-                            `New Incident Detected: INC-${String(incidentNumber).padStart(3, '0')}`,
-                            `You have been assigned as the Incident Lead for INC-${String(incidentNumber).padStart(3, '0')}.\n\nTitle: ${cluster.title}\nDescription: ${cluster.description}\nAffected Tickets: ${clusterTicketDocs.length}\nStatus: Investigating\n\nPlease investigate and manage this incident.`
-                        );
-                    } catch (emailErr) {
-                        console.error("[Incident Detection] Failed to email incident lead:", emailErr.message);
-                    }
-
-                    // Send email to all unique ticket raisers
-                    const uniqueRaisers = [...new Set(clusterTicketDocs.map(t => t.createdBy?.email).filter(Boolean))];
-                    for (const raiserEmail of uniqueRaisers) {
-                        try {
-                            await sendMail(
-                                raiserEmail,
-                                `Your ticket is part of Incident INC-${String(incidentNumber).padStart(3, '0')}`,
-                                `We've identified that your reported issue is part of a larger incident (INC-${String(incidentNumber).padStart(3, '0')}).\n\nIncident: ${cluster.title}\n\nOur team is actively investigating this issue. You will be notified when it is resolved.`
-                            );
-                        } catch (emailErr) {
-                            console.error(`[Incident Detection] Failed to email raiser ${raiserEmail}:`, emailErr.message);
-                        }
-                    }
 
                     console.log(`[Incident Detection] Created INC-${String(incidentNumber).padStart(3, '0')}: "${cluster.title}" with ${clusterTicketDocs.length} tickets.`);
 

@@ -1,5 +1,5 @@
 import express from "express"
-import { getUser, login, addUser, logout, updateUser, deleteUser, getDepartmentEmployees, getCollaboratorCandidates, getEmployeesByDepartment } from "../controllers/user.js"
+import { getUser, login, addUser, logout, updateUser, deleteUser, getDepartmentEmployees, getCollaboratorCandidates, getEmployeesByDepartment, forgotPassword, verifyOTP, resetPassword } from "../controllers/user.js"
 
 
 import { authenticate } from "../middlewares/auth.js";
@@ -17,6 +17,9 @@ router.get("/employees-by-department", authenticate, getEmployeesByDepartment)
 
 router.post("/login", login)
 router.post("/logout", logout)
+router.post("/forgot-password", forgotPassword)
+router.post("/verify-otp", verifyOTP)
+router.post("/reset-password", resetPassword)
 
 
 export default router

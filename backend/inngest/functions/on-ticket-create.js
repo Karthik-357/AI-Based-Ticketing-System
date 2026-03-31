@@ -5,7 +5,6 @@ import Skill from "../../models/skill.js";
 import Incident from "../../models/incident.js";
 import TicketActivity from "../../models/ticketActivity.js";
 import { NonRetriableError } from "inngest";
-import { sendMail } from "../../utils/mailer.js";
 import analyzeTicket, { analyzeTicketWithIncidentCheck } from "../../utils/ai.js";
 
 // Calculate priority based on impact and urgency matrix
@@ -205,22 +204,6 @@ export const onTicketCreated = inngest.createFunction(
                     }
                 });
 
-                await step.run("send-incident-link-email", async () => {
-                    const raiser = await User.findById(ticket.createdBy);
-                    if (raiser) {
-                        const incNumber = `INC-${String(matchedIncident.incidentNumber).padStart(3, '0')}`;
-                        try {
-                            await sendMail(
-                                raiser.email,
-                                `Your ticket is part of a known incident (${incNumber})`,
-                                `Your ticket "${ticket.title}" has been linked to an active incident.\n\nIncident: ${incNumber} - ${matchedIncident.title}\n\nOur team is actively working on this issue. You will be notified when it is resolved.`
-                            );
-                        } catch (emailErr) {
-                            console.error("Failed to email raiser about incident link:", emailErr.message);
-                        }
-                    }
-                });
-
                 console.log(`[Ticket Created] Ticket linked to incident INC-${String(matchedIncident.incidentNumber).padStart(3, '0')}.`);
                 return { success: true, linkedToIncident: true };
             }
@@ -278,25 +261,6 @@ export const onTicketCreated = inngest.createFunction(
                         }
 
                         await Ticket.findByIdAndUpdate(ticket._id, updateData);
-                    }
-                });
-
-                // Send email to manually assigned user
-                await step.run("send-manual-assignment-email", async () => {
-                    const currentTicket = await Ticket.findById(ticket._id);
-                    if (currentTicket.assignedTo) {
-                        const assignee = await User.findById(currentTicket.assignedTo);
-                        if (assignee) {
-                            try {
-                                await sendMail(
-                                    assignee.email,
-                                    "Ticket Assigned",
-                                    `A new ticket has been assigned to you: ${currentTicket.title}`
-                                );
-                            } catch (emailErr) {
-                                console.error("Failed to send assignment email:", emailErr.message);
-                            }
-                        }
                     }
                 });
 
@@ -456,17 +420,6 @@ export const onTicketCreated = inngest.createFunction(
 
                 return selectedUser;
             });
-            await step.run("send-email-notification", async () => {
-                if (moderator) {
-                    const finalTicket = await Ticket.findById(ticket._id)
-                    await sendMail(
-                        moderator.email,
-                        "Ticket Assigned",
-                        `A new ticket is assigned to you ${finalTicket.title}`
-                    )
-                }
-            })
-
             return { success: true }
 
         } catch (err) {
