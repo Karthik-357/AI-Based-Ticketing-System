@@ -90,9 +90,19 @@ function Dashboard() {
   const fetchStats = async () => {
     try {
       const token = localStorage.getItem('token');
+      if (!token || token === "null" || token === "undefined") {
+        navigate("/login")
+        return
+      }
       const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/dashboard/stats`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
+      if (res.status === 401) {
+        const data = await res.json();
+        localStorage.removeItem("token");
+        navigate("/login");
+        return;
+      }
       if (!res.ok) throw new Error('Failed to fetch dashboard stats');
       const data = await res.json();
       setStats(data);

@@ -20,8 +20,15 @@ export const canEmployeeAccessTicket = (user, ticket) => {
 };
 
 export const canManagerAccessTicket = async (user, ticket) => {
+    const userId = getIdString(user._id);
     const ticketDeptId = getIdString(ticket.department);
     const userDeptId = getIdString(user.department);
+    const createdById = getIdString(ticket.createdBy);
+
+    // Manager can always access tickets they created
+    if (createdById === userId) {
+        return true;
+    }
 
     // Manager can access tickets in their department
     if (ticketDeptId === userDeptId) {
@@ -45,6 +52,14 @@ export const canManagerAccessTicket = async (user, ticket) => {
         req.status === "pending" && deptEmployeeIdStrings.includes(getIdString(req.user))
     );
     if (hasPendingRequestForDeptEmployee) {
+        return true;
+    }
+
+    // Manager can access tickets where their department employees are approved collaborators
+    const hasCollaboratorFromDept = (ticket.collaborators || []).some(c =>
+        deptEmployeeIdStrings.includes(getIdString(c))
+    );
+    if (hasCollaboratorFromDept) {
         return true;
     }
 

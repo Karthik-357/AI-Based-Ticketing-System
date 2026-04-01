@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from "react-router-dom"
 import { AlertTriangle, Siren, CheckCircle2, Clock, ShieldCheck } from "lucide-react"
+import toast from 'react-hot-toast'
 
 function Incidents() {
     const [incidents, setIncidents] = useState([])
@@ -15,11 +16,22 @@ function Incidents() {
     const fetchIncidents = async () => {
         setLoading(true)
         try {
+            const token = localStorage.getItem("token")
+            if (!token || token === "null" || token === "undefined") {
+                navigate("/login")
+                return
+            }
             const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/incidents`, {
-                headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+                headers: { "Authorization": `Bearer ${token}` }
             })
             const data = await res.json()
-            if (res.ok) setIncidents(Array.isArray(data) ? data : [])
+            if (res.ok) {
+                setIncidents(Array.isArray(data) ? data : [])
+            } else if (res.status === 401) {
+                toast.error(data.message || "Session expired. Please log in again.")
+                localStorage.removeItem("token")
+                navigate("/login")
+            }
         } catch (error) {
             console.error("Failed to fetch incidents:", error)
         } finally {

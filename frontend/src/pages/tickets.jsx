@@ -57,11 +57,22 @@ function Tickets() {
 
   const fetchDepartments = async () => {
     try {
+      const token = localStorage.getItem("token")
+      if (!token || token === "null" || token === "undefined") {
+        navigate("/login")
+        return
+      }
       const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/departments`, {
-        headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+        headers: { "Authorization": `Bearer ${token}` }
       })
       const data = await res.json()
-      if (res.ok) setDepartments(Array.isArray(data) ? data : [])
+      if (res.ok) {
+        setDepartments(Array.isArray(data) ? data : [])
+      } else if (res.status === 401) {
+        toast.error(data.message || "Session expired. Please log in again.")
+        localStorage.removeItem("token")
+        navigate("/login")
+      }
     } catch (error) {
       console.error("Error fetching departments:", error)
     }
@@ -92,12 +103,18 @@ function Tickets() {
   const fetchTickets = async () => {
     setLoading(true)
     try {
+      const token = localStorage.getItem("token")
+      if (!token || token === "null" || token === "undefined") {
+        toast.error("Session expired. Please log in again.")
+        navigate("/login")
+        return
+      }
       const viewParam = `?view=${activeTab}`
       const res = await fetch(`${import.meta.env.VITE_SERVER_URL}/tickets${viewParam}`,
         {
           method: "GET",
           headers: {
-            "Authorization": `Bearer ${localStorage.getItem("token")}`
+            "Authorization": `Bearer ${token}`
           }
         }
       )
@@ -105,8 +122,14 @@ function Tickets() {
       if (res.ok) {
         setTickets(Array.isArray(data) ? data : [])
       } else {
-        console.error("Failed to fetch tickets:", data.message)
-        toast.error(data.message || "Failed to fetch tickets")
+        console.error("Failed to fetch tickets:", data.message || data.error)
+        if (res.status === 401) {
+          toast.error(data.message || "Session expired. Please log in again.")
+          localStorage.removeItem("token")
+          navigate("/login")
+        } else {
+          toast.error(data.message || data.error || "Failed to fetch tickets")
+        }
         setTickets([])
       }
     } catch (error) {
