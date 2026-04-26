@@ -372,7 +372,28 @@ export const onTicketCreated = inngest.createFunction(
                     console.log(`[Assignment] Tier 1 candidates: ${candidates.map(c => c.email).join(", ") || "none"}`);
 
                     if (candidates.length > 0) {
-                        selectedUser = await findBestCandidate(candidates);
+                        // Rank candidates by number of matching skills (most matches wins)
+                        const relatedSkillIdStrings = relatedSkillIds.map(id => id.toString());
+                        const candidatesWithMatchCount = candidates.map(candidate => {
+                            const matchCount = (candidate.skills || []).filter(skillId =>
+                                relatedSkillIdStrings.includes(skillId.toString())
+                            ).length;
+                            return { candidate, matchCount };
+                        });
+
+                        // Find the maximum match count
+                        const maxMatchCount = Math.max(...candidatesWithMatchCount.map(c => c.matchCount));
+
+                        // Filter to only candidates with the highest match count
+                        const topCandidates = candidatesWithMatchCount
+                            .filter(c => c.matchCount === maxMatchCount)
+                            .map(c => c.candidate);
+
+                        console.log(`[Assignment] Skill match ranking: ${candidatesWithMatchCount.map(c => `${c.candidate.email} (${c.matchCount} matches)`).join(", ")}`);
+                        console.log(`[Assignment] Top candidates (${maxMatchCount} matches): ${topCandidates.map(c => c.email).join(", ")}`);
+
+                        // Among top candidates, use load-balancing as tiebreaker
+                        selectedUser = await findBestCandidate(topCandidates);
                     }
                 } else {
                     console.log(`[Assignment] No related skills returned. Skipping Tier 1.`);
